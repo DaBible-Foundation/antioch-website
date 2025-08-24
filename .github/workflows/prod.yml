@@ -137,4 +137,8 @@
 #           envs: RELEASES_PATH
 #           script: |
 #             cd $ARTIFACTS_PATH && ls -t -1 | tail -n +6 | xargs rm -rf
+<<<<<<< HEAD
 #             cd $RELEASES_PATH && ls -t -1 | tail -n +6 | xargs rm -rf
+=======
+#             cd $RELEASES_PATH && ls -t -1 | tail -n +6 | xargs rm -rf
+>>>>>>> dcb0027 (Removed all Unwanted Files)

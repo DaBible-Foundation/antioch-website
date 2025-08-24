@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { ChevronDown, Heart,
+// import { Button } from "@/components/ui/button";
+import { 
+  //ChevronDown, Heart,
   //  ShoppingCart, 
    Menu } from "lucide-react";
 
@@ -49,8 +50,8 @@ export default function Header() {
             onClick={() => navigate("/")}
           >
             <Image
-              src="/png/Dabible Foundation Logo.png"
-              alt="Dabible Logo"
+              src="/svg/antioch.svg"
+              alt="Antioch Logo"
               width={120}
               height={40}
               className="mr-8"
@@ -67,6 +68,13 @@ export default function Header() {
             </button>
 
             <button
+              onClick={() => navigate("#register")}
+              className={`${pathname === "/register" ? "text-[#6B051F] font-semibold" : "text-gray-700"} hover:text-gray-900 cursor-pointer`}
+            >
+              Register <span className="text-gray-500">(Free)</span>
+            </button>
+
+            {/* <button
               onClick={() => navigate("/about")}
               className={`${pathname === "/about" ? "text-[#6B051F] font-semibold" : "text-gray-700"} hover:text-gray-900 cursor-pointer`}
             >
@@ -121,7 +129,7 @@ export default function Header() {
               className={`${pathname === "/antioch" ? "text-[#6B051F] font-semibold" : "text-gray-700"} hover:text-gray-900 cursor-pointer`}
             >
               Bible Study
-            </button>
+            </button> */}
             {/* <button
               onClick={() => navigate("/shop")}
               className={`${pathname === "/shop" ? "text-[#6B051F] font-semibold" : "text-gray-700"} hover:text-gray-900 cursor-pointer`}
@@ -147,6 +155,12 @@ export default function Header() {
                   Home
                 </button>
                 <button
+                  onClick={() => navigate("#register")}
+                  className={`${pathname === "/about" ? "text-[#6B051F] font-semibold" : "text-gray-700"} hover:text-gray-900 py-2 cursor-pointer`}
+                >
+                  Register
+                </button>
+                {/* <button
                   onClick={() => navigate("/about")}
                   className={`${pathname === "/about" ? "text-[#6B051F] font-semibold" : "text-gray-700"} hover:text-gray-900 py-2 cursor-pointer`}
                 >
@@ -197,7 +211,7 @@ export default function Header() {
                   className={`${pathname === "/antioch" ? "text-[#6B051F] font-semibold" : "text-gray-700"} hover:text-gray-900 py-2 cursor-pointer`}
                 >
                   Bible Study
-                </button>
+                </button> */}
                 {/* <button
                   onClick={() => navigate("/shop")}
                   className={`${pathname === "/shop" ? "text-[#6B051F] font-semibold" : "text-gray-700"} hover:text-gray-900 py-2 cursor-pointer`}
@@ -217,7 +231,7 @@ export default function Header() {
               <ShoppingCart className="h-4 w-4 mr-1 text-[#023E8A]" />
               <span className="hidden sm:inline">CART</span>
             </Button> */}
-            <Button
+            {/* <Button
               onClick={() => navigate("https://donate.dabible.com")}
               className="bg-[#C8385E] hover:bg-[#C8385E]/90 text-white cursor-pointer"
             >
@@ -225,7 +239,7 @@ export default function Header() {
               <span className="sm:hidden">
                 <Heart className="h-4 w-4" />
               </span>
-            </Button>
+            </Button> */}
             <button
               onClick={() => setIsMobileMenuOpen(true)}
               className="lg:hidden p-2 cursor-pointer"

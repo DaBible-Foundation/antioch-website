@@ -4,21 +4,20 @@ import { Facebook, Instagram, Phone, Youtube } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="bg-[#091D36] text-white md:h-[577px] font-mada">
+    <footer className="bg-[#202020] text-white md:h-[577px] font-mada">
       <div className="container mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Logo and Description */}
           <div className="col-span-1 lg:col-span-1 space-y-16">
             <Image
-              src="/png/white-logo.png"
+              src="/svg/antioch.svg"
               alt="DaBible Foundation"
               width={200}
               height={60}
               className="mb-4"
             />
             <p className="text-white text-sm mb-6">
-              An open source platform to develop digital bible and empower
-              missionaries.
+              This is where a little one becomes a thousand, and a small one becomes a strong nation.
             </p>
 
             {/* App Store Buttons */}
@@ -47,19 +46,19 @@ export default function Footer() {
             {/* Social Media Icons */}
             <div className="flex gap-4 mt-6">
               <Link
-                href="#"
+                href="https://www.facebook.com/dabiblefoundation/"
                 className="bg-white text-blue-950 p-2 rounded-full hover:bg-gray-200 transition-colors hover:underline"
               >
                 <Facebook size={18} />
               </Link>
               <Link
-                href="#"
+                href="https://www.youtube.com/@antioch_live"
                 className="bg-white text-blue-950 p-2 rounded-full hover:bg-gray-200 transition-colors hover:underline"
               >
                 <Youtube size={18} />
               </Link>
               <Link
-                href="#"
+                href="https://www.facebook.com/dabiblefoundation/"
                 className="bg-white text-blue-950 p-2 rounded-full hover:bg-gray-200 transition-colors hover:underline"
               >
                 <Instagram size={18} />
@@ -73,7 +72,7 @@ export default function Footer() {
             <ul className="space-y-3">
               <li>
                 <Link
-                  href="https://www.youtube.com/@dabible-foundation"
+                  href="https://www.youtube.com/@antioch_live"
                   target="_blank"
                   className="flex items-center text-white hover:text-white transition-colors hover:underline"
                 >
@@ -103,37 +102,37 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="https://wa.me/15093394854"
+                  href="https://wa.me/12566179644"
                   target="_blank"
                   className="flex items-center text-white hover:text-white transition-colors hover:underline"
                 >
                   <Phone size={18} className="mr-2" />
-                  1-509-339-4854
+                  1-256-617-9644
                 </Link>
-              </li>
+              </li> 
             </ul>
           </div>
 
           {/* Resources */}
-          <div className="col-span-1">
+          {/* <div className="col-span-1">
             <h3 className="text-lg font-bold mb-4">RESOURCES</h3>
             <ul className="space-y-3">
-              {/* <li>
+              <li>
                 <Link
                   href="#"
                   className="text-white hover:text-white transition-colors hover:underline"
                 >
                   Blog
                 </Link>
-              </li> */}
-              {/* <li>
+              </li>
+              <li>
                 <Link
                   href="#"
                   className="text-white hover:text-white transition-colors hover:underline"
                 >
                   Shop
                 </Link>
-              </li> */}
+              </li>
               <li>
                 <Link
                   href="https://support.dabible.com"
@@ -143,12 +142,20 @@ export default function Footer() {
                 </Link>
               </li>
             </ul>
-          </div>
+          </div> */}
 
           {/* Company */}
           <div className="col-span-1">
-            <h3 className="text-lg font-bold mb-4">COMPANY</h3>
+            <h3 className="text-lg font-bold mb-4">MORE</h3>
             <ul className="space-y-3">
+              <li>
+                <Link
+                  href="/about"
+                  className="text-white hover:text-white transition-colors hover:underline"
+                >
+                  DaBible Foundation
+                </Link>
+              </li>
               <li>
                 <Link
                   href="/about"
@@ -179,11 +186,11 @@ export default function Footer() {
 
         {/* Copyright */}
         <div className="mt-12 pt-6 border-t border-gray-200">
-          <p className="text-white text-base text-center">
+          {/* <p className="text-white text-base text-center">
             DABIBLE FOUNDATION IS A DBA (DOING BUSINESS AS) OF KERYGMA
             FOUNDATION, A REGISTERED 501(C)(3) NON-PROFIT ORGANIZATION IN THE
             USA AND NIGERIA. ALL RIGHTS RESERVED
-          </p>
+          </p> */}
         </div>
       </div>
     </footer>
