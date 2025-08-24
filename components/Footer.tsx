@@ -58,7 +58,7 @@ export default function Footer() {
                 <Youtube size={18} />
               </Link>
               <Link
-                href="https://www.facebook.com/dabiblefoundation/"
+                href="https://www.instagram.com/antiochbelievers/"
                 className="bg-white text-blue-950 p-2 rounded-full hover:bg-gray-200 transition-colors hover:underline"
               >
                 <Instagram size={18} />
@@ -92,7 +92,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="https://www.instagram.com/dabiblefoundation/"
+                  href="https://www.instagram.com/antiochbelievers/"
                   target="_blank"
                   className="flex items-center text-white hover:text-white transition-colors hover:underline"
                 >
