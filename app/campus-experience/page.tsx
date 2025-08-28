@@ -1,8 +1,9 @@
 "use client";
 import { useState } from "react";
+import type { Metadata } from 'next'
 import "animate.css";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Campus Experience | DaBible Foundation",
   description: "Experience our campus events, workshops, and Bible study sessions. Connect with other students and grow in faith.",
   openGraph: {
