@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     description: "Join our interactive online Bible Study every weekday. Grow with other believers, study the Word, and experience spiritual transformation.",
     images: [
       {
-        url: "https://dabible.com/png/antioch-large.png",
+        url: "https://welcometoantioch.com/png/antioch-large.png",
         width: 1200,
         height: 630,
         alt: "Antioch Online Bible Study",
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Antioch Online Bible Study | DaBible Foundation",
     description: "Join our interactive online Bible Study every weekday. Grow with other believers, study the Word, and experience spiritual transformation.",
-    images: ["https://dabible.com/png/antioch-large.png"],
+    images: ["https://welcometoantioch.com/png/antioch-large.png"],
   },
 };
 

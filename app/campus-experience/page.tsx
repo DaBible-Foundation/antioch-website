@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     description: "Join us on the next Campus Experience in your campus for a night of fire, prayers and empowerment in the Holy Ghost. Connect with other students and grow in faith.",
     images: [
       {
-        url: "https://dabible.com/png/ACE-coming-soon.png",
+        url: "https://welcometoantioch.com/png/ACE-coming-soon.png",
         width: 1200,
         height: 630,
         alt: "Campus Experience",
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Campus Experience | DaBible Foundation",
     description: "Join us on the next Campus Experience in your campus for a night of fire, prayers and empowerment in the Holy Ghost. Connect with other students and grow in faith.",
-    images: ["https://dabible.com/png/ACE-coming-soon.png"],
+    images: ["https://welcometoantioch.com/png/ACE-coming-soon.png"],
   },
 };
 
