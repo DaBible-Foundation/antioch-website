@@ -1,11 +1,11 @@
-"use client"
+// "use client"
 import BibleStudyForm from "@/components/BibleStudyForm";
 import Image from "next/image";
 import type { Metadata } from 'next'
 import CountryTimeSelector from "@/components/CountryTimeSelector";
 
 export const metadata: Metadata = {
-  title: "Antioch - Welcome to Antioch | DaBible Foundation",
+  title: "Antioch Online Bible Study | DaBible Foundation",
   description: "Join our interactive online Bible Study every weekday. Grow with other believers, study the Word, and experience spiritual transformation.",
   openGraph: {
     title: "Antioch Online Bible Study | DaBible Foundation",
