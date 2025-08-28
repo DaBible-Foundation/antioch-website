@@ -30,8 +30,6 @@ export default function RootLayout({
     <html lang="en">
       <head>
       <meta httpEquiv="X-UA-Compatible" content="IE=edge"></meta>
-      <meta charSet="utf-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1" />
       {/* <GoogleTagManager gtmId="GTM-5S7K5XS" /> */}
         {/* Google Tag Manager */}
         {/* <script dangerouslySetInnerHTML={{
