@@ -68,19 +68,19 @@ export default function Header() {
             </button>
 
             <button
-              onClick={() => navigate("#register")}
+              onClick={() => navigate("/#register")}
               className={`${pathname === "/register" ? "text-[#6B051F] font-semibold" : "text-gray-700"} hover:text-gray-900 cursor-pointer`}
             >
               Register <span className="text-gray-500">(Free)</span>
             </button>
 
-            {/* <button
-              onClick={() => navigate("/about")}
-              className={`${pathname === "/about" ? "text-[#6B051F] font-semibold" : "text-gray-700"} hover:text-gray-900 cursor-pointer`}
+            <button
+              onClick={() => navigate("/campus-experience")}
+              className={`${pathname === "/campus-experience" ? "text-[#6B051F] font-semibold" : "text-gray-700"} hover:text-gray-900 cursor-pointer`}
             >
-              About Us
+              Antioch Campus Experience
             </button>
-            <div className="relative group">
+            {/* <div className="relative group">
               <button
                 className={`${pathname.includes("/products") ? "text-[#6B051F] font-semibold" : "text-gray-700"} hover:text-gray-900 flex items-center cursor-pointer`}
                 onClick={() => setShowProductsDropdown(!showProductsDropdown)}
@@ -155,18 +155,18 @@ export default function Header() {
                   Home
                 </button>
                 <button
-                  onClick={() => navigate("#register")}
+                  onClick={() => navigate("/#register")}
                   className={`${pathname === "/about" ? "text-[#6B051F] font-semibold" : "text-gray-700"} hover:text-gray-900 py-2 cursor-pointer`}
                 >
                   Register
                 </button>
-                {/* <button
-                  onClick={() => navigate("/about")}
-                  className={`${pathname === "/about" ? "text-[#6B051F] font-semibold" : "text-gray-700"} hover:text-gray-900 py-2 cursor-pointer`}
+                 <button
+                  onClick={() => navigate("/campus-experience")}
+                  className={`${pathname === "/campus-experience" ? "text-[#6B051F] font-semibold" : "text-gray-700"} hover:text-gray-900 py-2 cursor-pointer`}
                 >
-                  About Us
+                  Antioch Campus Experience
                 </button>
-                <button
+                {/*<button
                   onClick={() => setShowProductsDropdown(!showProductsDropdown)}
                   className={`${pathname.includes("/products") ? "text-[#6B051F] font-semibold" : "text-gray-700"} hover:text-gray-900 py-2 flex items-center cursor-pointer`}
                 >

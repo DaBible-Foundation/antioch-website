@@ -335,7 +335,7 @@ export default function BibleStudyForm() {
 
         {/* Disclaimer */}
         <p className="text-center text-xs sm:text-sm text-gray-500">
-          By submitting this form you agree to DaBBible Foundation's {" "}
+          By submitting this form you agree to DaBible Foundation's {" "}
           <Link href="/privacy-policy" className="text-[#C8385E] hover:underline">
             Privacy Policy</Link>  {" "}
           and acknowledge that you have read our the policy.
