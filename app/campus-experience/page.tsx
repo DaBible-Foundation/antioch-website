@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
-import "animate.css";
-import CampusExperienceIframe from "@/components/CampusExprienceIframe";
+import CampusExperienceIframe from "./CampusExperienceIframe";
 
 export const metadata: Metadata = {
   title: "Campus Experience | DaBible Foundation",
@@ -28,6 +27,3 @@ export const metadata: Metadata = {
 export default function CampusExperiencePage() {
   return <CampusExperienceIframe />;
 }
-
-
-

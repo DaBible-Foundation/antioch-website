@@ -4,10 +4,12 @@ import "animate.css";
 
 export default function CampusExperienceIframe() {
   const [loading, setLoading] = useState(true);
-   <div
+
+  return (
+    <div
       className="min-h-screen bg-gray-300"
       style={{
-        overflow: "hidden", // Prevent page scroll
+        overflow: "hidden",
         height: "100vh",
         width: "100vw",
         marginTop: 80,
@@ -49,7 +51,7 @@ export default function CampusExperienceIframe() {
               border: "none",
               padding: 0,
               margin: 0,
-              overflow: "auto", // Enable iframe scroll
+              overflow: "auto",
             }}
             src="https://www.canva.com/design/DAGxXqKRawg/IhH6ZcwUxHYap98pLhFFmA/view?embed"
             allowFullScreen
@@ -60,4 +62,5 @@ export default function CampusExperienceIframe() {
         </div>
       </section>
     </div>
+  );
 }
