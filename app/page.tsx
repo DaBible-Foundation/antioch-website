@@ -3,6 +3,29 @@ import BibleStudyForm from "@/components/BibleStudyForm";
 import Image from "next/image";
 import CountryTimeSelector from "@/components/CountryTimeSelector";
 
+export const metadata = {
+  title: "Antioch Online Bible Study | DaBible Foundation",
+  description: "Join our interactive online Bible Study every weekday. Grow with other believers, study the Word, and experience spiritual transformation.",
+  openGraph: {
+    title: "Antioch Online Bible Study | DaBible Foundation",
+    description: "Join our interactive online Bible Study every weekday. Grow with other believers, study the Word, and experience spiritual transformation.",
+    images: [
+      {
+        url: "https://dabible.com/png/antioch-large.png",
+        width: 1200,
+        height: 630,
+        alt: "Antioch Online Bible Study",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Antioch Online Bible Study | DaBible Foundation",
+    description: "Join our interactive online Bible Study every weekday. Grow with other believers, study the Word, and experience spiritual transformation.",
+    images: ["https://dabible.com/png/antioch-large.png"],
+  },
+};
+
 export default function AntiochPage() {
 
   return (
