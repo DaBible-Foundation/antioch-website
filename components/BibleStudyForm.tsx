@@ -109,7 +109,7 @@ export default function BibleStudyForm() {
         });
         setCharCount(0);
         setRecaptchaToken(null);
-        router.push("/antioch/congratulations");
+        router.push("/congratulations");
       } else {
         setStatus("error");
       }
