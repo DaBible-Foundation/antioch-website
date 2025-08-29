@@ -18,12 +18,12 @@ export default function CampusExperienceIframe() {
         left: 0,
       }}
     >
-      <section className="relative max-w-[900px] mx-auto overflow-hidden">
+      <section className="relative max-w-[900px] h-full mx-auto overflow-hidden">
         <div
           style={{
             position: "relative",
             width: "100%",
-            height: 0,
+            height: '90%',
             paddingTop: "100%",
             paddingBottom: 0,
             boxShadow: "0 2px 8px 0 rgba(63,69,81,0.16)",
