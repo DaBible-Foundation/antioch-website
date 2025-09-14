@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Image from "next/image";
 import "animate.css";
 
 export default function CampusExperienceIframe() {
@@ -19,7 +20,7 @@ export default function CampusExperienceIframe() {
       }}
     >
       <section className="relative max-w-[900px] mx-auto overflow-hidden">
-        <img src="/svg/volunteer.svg" alt="Sign Up to Volunteer" className="mx-auto w-full"/>
+        <Image src="/svg/volunteer.svg" alt="Sign Up to Volunteer" className="mx-auto w-full" width={900} height={100}/>
         <div
           style={{
             position: "relative",
