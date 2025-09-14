@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Image from "next/image";
 import "animate.css";
 
 export default function VolunteerFormIframe() {
@@ -9,7 +10,7 @@ export default function VolunteerFormIframe() {
     <div
       className="min-h-screen bg-gray-300"
       style={{
-        overflow: "hidden",
+        overflow: "auto",
         height: "100vh",
         width: "100vw",
         marginTop: 80,
@@ -18,7 +19,8 @@ export default function VolunteerFormIframe() {
         left: 0,
       }}
     >
-      <section className="relative max-w-[900px] h-full mx-auto overflow-hidden">
+      <section className="relative max-w-[900px] h-9/12 mx-auto overflow-hidden">
+        <Image src="/png/volunteer-header2.png" alt="Sign Up to Volunteer" className="mx-auto w-full" width={900} height={100}/>
         <div
           style={{
             position: "relative",
@@ -27,10 +29,10 @@ export default function VolunteerFormIframe() {
             paddingTop: "100%",
             paddingBottom: 0,
             boxShadow: "0 2px 8px 0 rgba(63,69,81,0.16)",
-            marginTop: "1.6em",
-            marginBottom: "0.9em",
+            // marginTop: "1.6em",
+            marginBottom: "0",
             overflow: "hidden",
-            borderRadius: "8px",
+            borderRadius: "0",
             willChange: "transform",
           }}
         >
@@ -52,6 +54,7 @@ export default function VolunteerFormIframe() {
               border: "none",
               padding: 0,
               margin: 0,
+              marginTop: 0,
               overflow: "auto",
             }}
             src="https://tally.so/embed/wd7vGV?alignLeft=1&hideTitle=1&transparentBackground=0&dynamicHeight=1"
@@ -61,6 +64,7 @@ export default function VolunteerFormIframe() {
             title="Volunteer Form"
           ></iframe>
         </div>
+        <Image src="/svg/volunteer-middle.svg" alt="Sign Up to Volunteer" className="mx-auto w-full" width={900} height={100}/>
       </section>
     </div>
   );
