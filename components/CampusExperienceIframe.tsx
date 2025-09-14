@@ -19,6 +19,7 @@ export default function CampusExperienceIframe() {
       }}
     >
       <section className="relative max-w-[900px] mx-auto overflow-hidden">
+        <img src="/svg/volunteer.svg" alt="Sign Up to Volunteer" className="mx-auto w-full"/>
         <div
           style={{
             position: "relative",

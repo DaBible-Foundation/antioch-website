@@ -7,12 +7,12 @@ export default function VolunteerFormIframe() {
 
   return (
     <div
-      className="min-h-screen bg-black"
+      className="min-h-screen bg-gray-300"
       style={{
         overflow: "hidden",
         height: "100vh",
         width: "100vw",
-        marginTop: 50,
+        marginTop: 80,
         position: "fixed",
         top: 0,
         left: 0,
@@ -23,7 +23,7 @@ export default function VolunteerFormIframe() {
           style={{
             position: "relative",
             width: "100%",
-            height: '90%',
+            height: '80%',
             paddingTop: "100%",
             paddingBottom: 0,
             boxShadow: "0 2px 8px 0 rgba(63,69,81,0.16)",
@@ -35,7 +35,7 @@ export default function VolunteerFormIframe() {
           }}
         >
           {loading && (
-            <div className="flex items-center justify-center h-full w-full absolute top-0 left-0 bg-gray-300 z-10">
+            <div className="flex items-center justify-center h-full w-full absolute !top-0 left-0 bg-gray-300 z-10">
               <span className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-[#6B051F]"></span>
               <span className="ml-4 text-lg font-semibold text-[#6B051F]">Loading...</span>
             </div>
@@ -44,7 +44,7 @@ export default function VolunteerFormIframe() {
             loading="lazy"
             style={{
               position: "absolute",
-              backgroundColor: "black",
+              backgroundColor: "white",
               width: "100%",
               height: "100%",
               top: 0,
@@ -54,7 +54,7 @@ export default function VolunteerFormIframe() {
               margin: 0,
               overflow: "auto",
             }}
-            src="https://tally.so/embed/wd7vGV?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1&formEventsForwarding=1"
+            src="https://tally.so/embed/wd7vGV?alignLeft=1&hideTitle=1&transparentBackground=0&dynamicHeight=1"
             allowFullScreen
             allow="fullscreen"
             onLoad={() => setLoading(false)}
