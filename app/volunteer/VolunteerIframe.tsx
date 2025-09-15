@@ -10,7 +10,7 @@ export default function VolunteerFormIframe() {
     <div
       className="min-h-screen bg-gray-300"
       style={{
-        overflow: "auto",
+        overflow: "hidden",
         height: "100vh",
         width: "100vw",
         marginTop: 80,
@@ -19,13 +19,13 @@ export default function VolunteerFormIframe() {
         left: 0,
       }}
     >
-      <section className="relative max-w-[900px] h-9/12 mx-auto overflow-hidden">
+      <section className="relative max-w-[900px] h-10/12 mx-auto overflow-hidden overflow-y-scroll">
         <Image src="/png/volunteer-header2.png" alt="Sign Up to Volunteer" className="mx-auto w-full" width={900} height={100}/>
         <div
           style={{
             position: "relative",
             width: "100%",
-            height: '80%',
+            height: '100%',
             paddingTop: "100%",
             paddingBottom: 0,
             boxShadow: "0 2px 8px 0 rgba(63,69,81,0.16)",
@@ -37,7 +37,7 @@ export default function VolunteerFormIframe() {
           }}
         >
           {loading && (
-            <div className="flex items-center justify-center h-full w-full absolute !top-0 left-0 bg-gray-300 z-10">
+            <div className="flex items-center justify-center h-full w-full absolute !top-0 left-0 bg-white z-10">
               <span className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-[#6B051F]"></span>
               <span className="ml-4 text-lg font-semibold text-[#6B051F]">Loading...</span>
             </div>
@@ -52,7 +52,7 @@ export default function VolunteerFormIframe() {
               top: 0,
               left: 0,
               border: "none",
-              padding: 0,
+              padding: 14,
               margin: 0,
               marginTop: 0,
               overflow: "auto",
@@ -64,7 +64,7 @@ export default function VolunteerFormIframe() {
             title="Volunteer Form"
           ></iframe>
         </div>
-        <Image src="/svg/volunteer-middle.svg" alt="Sign Up to Volunteer" className="mx-auto w-full" width={900} height={100}/>
+        <Image src="/svg/volunteer-middle.svg" alt="Sign Up to Volunteer" className="mx-auto w-full h-auto" width={900} height={100}/>
       </section>
     </div>
   );
