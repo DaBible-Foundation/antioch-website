@@ -1,14 +1,15 @@
 
 
 import Image from "next/image";
+import Link from "next/link";
 
 export default function AntiochPage() {
   
   return (
     <div className="w-full">
-      <section className="bg-[#fef9f4] py-16 px-6 md:px-20 flex flex-col-reverse lg:flex-row items-center gap-10 relative overflow-hidden">
+      <section className="bg-[#fef9f4] py-8 md:py-16 px-6 md:px-20 flex flex-col-reverse lg:flex-row items-center gap-10 relative overflow-hidden">
         {/* Left Text Content */}
-        <div className="absolute inset-0 w-full bg-[url('/designs/bible-girl.jpg')] bg-top-left lg:bg-top-right bg-no-repeat z-1"></div>
+        {/* <div className="absolute inset-0 w-full bg-[url('/designs/bible-girl.jpg')] bg-top-left lg:bg-top-right bg-no-repeat z-1"></div> */}
         <div className="absolute w-full bg-gradient-to-t from-20% from-white to-transparent z-2 bottom-0 left-0 h-32"></div>
         <div className="absolute inset-0 w-full bg-[url('/svg/polygon-1.svg')] bg-top-left lg:bg-bottom-left bg-no-repeat z-1"></div>
 
@@ -27,28 +28,33 @@ export default function AntiochPage() {
 
             <div className="bg-[url('/svg/line-break-2.svg')] w-full h-[20px] bg-center bg-contain bg-no-repeat my-8 mx-auto"></div> */}
             
-            <Image
-            src="/svg/antioch.svg"
-            alt="Bible Study Logo"
-            className="w-2/3 max-w-md h-auto object-contain mx-auto mt-4"
-            width={500}
-            height={500}
-            />
-            <p className="text-md md:text-xl lg:text-2xl font-medium text-gray-800">Congratulations!</p>
+            <h1 className="text-2xl lg:text-5xl mt-0 mb-8 md:mt-8 md:mb-16 font-montserrat font-extrabold text-gray-800">Congratulations!</h1>
             <p className="text-lg md:text-xl text-gray-700 mt-4 font-proza-libre max-w-2xl mx-auto">
               Before you begin your Bible study journey, There is a 1:1 onboarding session to walk you through how we study the Bible together as a community.
             </p>
             <p className="text-lg md:text-xl text-gray-700 mt-4 font-proza-libre max-w-2xl mx-auto">
               The next onboarding session will be announced on our Onboarding WhatsApp group
             </p>
-            <a
-              href="https://chat.whatsapp.com/FGA9UkTb1mY0MnFGCgHTGc"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block mt-6 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-300"
-            >
-              Join the WhatsApp Group
-            </a>
+            <div className="w-auto max-w-96 mx-auto mt-8 d-inline">
+                <Link
+                href="https://chat.whatsapp.com/FGA9UkTb1mY0MnFGCgHTGc"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-col justify-center items-center gap-6"
+                >
+
+                <Image
+                src="/png/onboarding.png"
+                alt="Bible Study Logo"
+                className="w-auto max-w-sm d-inline h-auto object-contain rounded-sm"
+                width={500}
+                height={500}
+                />
+
+                <span className="inline bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-300">Join Antioch WhatsApp Group</span> 
+            </Link>
+
+            </div>
             <p className="font-comforter text-6xl lg:text-8xl mt-8">Join our</p>
             <p className="text-4xl text-[#111556] -mt-4 font-extrabold font-montserrat lg:text-5xl uppercase">WhatsApp Group</p>
         </div>
@@ -82,7 +88,7 @@ export default function AntiochPage() {
 
                 {/* What Will Happen */}
                 <h3 className="text-xl mb-4 text-gray-900 font-montserrat font-extrabold">Agenda:</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-2 gap-4 text-md text-gray-800 font-medium">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-4 text-md text-left text-gray-800 font-medium mb-8">
                     <div className="flex items-center gap-2">1. Brief Introduction</div>
                     <div className="flex items-center gap-2">2. Introduce Yourself</div>
                     <div className="flex items-center gap-2">3. What we believe in</div>
@@ -113,7 +119,7 @@ export default function AntiochPage() {
                 rel="noopener noreferrer"
                 className=" bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-300"
                 >
-                Join WhatsApp Group
+                Join Antioch WhatsApp Group
                 </a>
 
                 <a
