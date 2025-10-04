@@ -31,7 +31,7 @@ export default function VolunteerFormIframe() {
             boxShadow: "0 2px 8px 0 rgba(63,69,81,0.16)",
             // marginTop: "1.6em",
             marginBottom: "0",
-            overflow: "hidden",
+            overflow: "scroll",
             borderRadius: "0",
             willChange: "transform",
           }}
