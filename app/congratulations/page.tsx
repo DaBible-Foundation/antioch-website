@@ -30,11 +30,11 @@ export default function AntiochPage() {
             
             <h1 className="text-2xl lg:text-5xl mt-0 mb-8 md:mt-8 md:mb-16 font-montserrat font-extrabold text-gray-800">Congratulations!</h1>
             <p className="text-lg md:text-xl text-gray-700 mt-4 font-proza-libre max-w-2xl mx-auto">
-              Before you begin your Bible study journey, There is a 1:1 onboarding session to walk you through how we study the Bible together as a community.
+              Before you begin your Bible study journey, there is a 1:1 onboarding session to walk you through how we study the Bible together as a community.
             </p>
-            <p className="text-lg md:text-xl text-gray-700 mt-4 font-proza-libre max-w-2xl mx-auto">
+            {/* <p className="text-lg md:text-xl text-gray-700 mt-4 font-proza-libre max-w-2xl mx-auto">
               The next onboarding session will be announced on our Onboarding WhatsApp group
-            </p>
+            </p> */}
             <div className="w-auto max-w-96 mx-auto mt-8 d-inline">
                 <Link
                 href="https://chat.whatsapp.com/FGA9UkTb1mY0MnFGCgHTGc"
