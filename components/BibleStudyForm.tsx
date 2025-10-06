@@ -153,6 +153,7 @@ export default function BibleStudyForm() {
   };
 
   const selectedCountry = countries.find(c => c.countryCode === formData.countryCode);
+  const phoneCountry = (selectedCountry?.countryCode || 'US') as import('react-phone-number-input').Country;
 
   return (
     <div className="bg-white rounded-lg shadow-2xl px-4 py-8 sm:p-10 max-w-xl sm:max-w-2xl w-full mx-auto">
@@ -211,11 +212,13 @@ export default function BibleStudyForm() {
           <label htmlFor="country" className="block sr-only">Country</label>
           <Select
             id="country"
+            inputId="bible-study-country-input"          // added
+            instanceId="bible-study-country"             // added
             name="country"
             className="text-black text-sm sm:text-base"
             classNamePrefix="react-select"
             options={countries.map(c => ({
-              value: c.countryCode,                       // UNIQUE
+              value: c.countryCode,
               label: `${c.flag} ${c.name} (${c.dialCode})`,
               dialCode: c.dialCode,
               plainName: c.name,
@@ -232,7 +235,6 @@ export default function BibleStudyForm() {
                 }))
                 .find(opt => opt.value === formData.countryCode) || null
             }
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             onChange={(option: any) => {
               setFormData(prev => ({
                 ...prev,
@@ -251,7 +253,7 @@ export default function BibleStudyForm() {
           <label htmlFor="phone" className="block sr-only">Phone</label>
           <PhoneInput
             international
-            country={selectedCountry?.countryCode as import('react-phone-number-input').Country || undefined}
+            country={phoneCountry} 
             required
             placeholder={
               selectedCountry

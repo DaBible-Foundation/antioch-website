@@ -160,6 +160,8 @@ export default function CountryTimeSelector() {
         <label htmlFor="country" className="block mb-2 font-semibold text-center">Bible Study Time by Country</label>
         <Select
             id="country"
+            instanceId="time-selector-country"
+            inputId="time-selector-country-input"
             name="country"
             className="text-black text-sm sm:text-base mb-4"
             classNamePrefix="react-select"
