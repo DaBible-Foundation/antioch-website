@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import { DateTime } from "luxon";
 import Select from 'react-select';
 import * as ct from 'countries-and-timezones';
+import BibleStudyForm from './BibleStudyForm'; // Import the form component
 
 const CST_TIME = "21:00"; // 9PM CST
 const CST_ZONE = "America/Chicago";
@@ -55,6 +56,7 @@ export default function CountryTimeSelector() {
   const countryList = Object.values(ct.getAllCountries());
   const [selectedCountry, setSelectedCountry] = useState<any>(null);
   const [selectedZone, setSelectedZone] = useState<string>("");
+  const [isModalOpen, setIsModalOpen] = useState(false); // Add modal state
   // Hydration-safe userZone and userLocalTime
   const [userZone, setUserZone] = useState(CST_ZONE);
   const [userLocalTime, setUserLocalTime] = useState<string>("");
@@ -215,10 +217,46 @@ export default function CountryTimeSelector() {
             </div>
         )}
         {selectedZone && (
-            <div className="text-lg font-bold text-gray-800 bg-green-200 rounded-sm text-center p-2">
-            Bible Study Time: {getLocalTimeForZone({ baseZone: CST_ZONE, baseTime: CST_TIME, targetZone: selectedZone })} ({DateTime.now().setZone(selectedZone).offsetNameShort})
+            <div 
+              className="text-lg font-bold text-gray-800 bg-green-200 rounded-sm text-center p-2 cursor-pointer hover:bg-green-300 transition-colors duration-200 border-2 border-transparent hover:border-green-400"
+              onClick={() => setIsModalOpen(true)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setIsModalOpen(true);
+                }
+              }}
+            >
+              Bible Study Time: {getLocalTimeForZone({ baseZone: CST_ZONE, baseTime: CST_TIME, targetZone: selectedZone })} ({DateTime.now().setZone(selectedZone).offsetNameShort})
+              <div className="text-sm mt-1 text-green-800">
+                📝 Click here to register for Bible Study
+              </div>
             </div>
         )}
+
+        {/* Modal */}
+        {isModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="relative max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              {/* Close button */}
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="absolute top-4 cursor-pointer right-4 z-10 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 transition-colors"
+                aria-label="Close modal"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              
+              {/* Form */}
+              <BibleStudyForm />
+            </div>
+          </div>
+        )}
+
         </div>
         <div className="text-center mt-8">
             <h4 className="text-lg font-bold text-gray-800">Other Locations</h4>

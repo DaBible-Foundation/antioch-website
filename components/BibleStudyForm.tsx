@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react/no-unescaped-entities */
 "use client"
@@ -142,7 +143,7 @@ export default function BibleStudyForm() {
           otherContactDetail: ""
         });
         setRecaptchaToken(null);
-        router.push("/congratulations");
+        // router.push("/congratulations");
       } else {
         setStatus("error");
       }

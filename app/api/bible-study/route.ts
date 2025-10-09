@@ -1,7 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable prefer-const */
 import { emailTemplate } from '@/components/EmailTemplate';
 import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
+import twilio from 'twilio';
 
 export const runtime = "nodejs";
 
@@ -120,62 +123,100 @@ async function sendUserEmail(
   }
 }
 
-// ---- SMS (Twilio) ----
-async function sendWelcomeSMS(firstName: string, phone: string) {
-  if (!ENABLE_SMS) return 'skipped';
-  if (!process.env.TWILIO_ACCOUNT_SID ||
-      !process.env.TWILIO_AUTH_TOKEN ||
-      !process.env.TWILIO_FROM_NUMBER) {
-    console.warn('Twilio env vars missing');
+// ---- SMS (Twilio SDK) ----
+async function sendWelcomeSMS(firstName: string, phone: string, countryCode: string) {
+  console.log('🔍 [SMS DEBUG] Starting sendWelcomeSMS function');
+  console.log('🔍 [SMS DEBUG] Parameters:', { firstName, phone, countryCode });
+  console.log('🔍 [SMS DEBUG] ENABLE_SMS flag:', ENABLE_SMS);
+  
+  if (!ENABLE_SMS) {
+    console.log('❌ [SMS DEBUG] SMS disabled via ENABLE_SMS flag');
     return 'skipped';
   }
+  
+  // Only send SMS to USA users
+  if (countryCode !== 'US') {  // ✅ CHECKS US COUNTRY
+    console.log(`❌ [SMS DEBUG] SMS skipped: User from ${countryCode}, not US`);
+    return 'skipped';
+  }
+  console.log('✅ [SMS DEBUG] Country check passed - user is from US');
+  
+  // Check environment variables
+  const twilioSid = process.env.TWILIO_ACCOUNT_SID;
+  const twilioToken = process.env.TWILIO_AUTH_TOKEN;
+  const twilioFrom = process.env.TWILIO_FROM_NUMBER;
+  
+  console.log('🔍 [SMS DEBUG] Twilio env vars check:');
+  console.log('  - TWILIO_ACCOUNT_SID:', twilioSid ? `Present (${twilioSid.substring(0, 10)}...)` : 'MISSING');
+  console.log('  - TWILIO_AUTH_TOKEN:', twilioToken ? `Present (${twilioToken.substring(0, 10)}...)` : 'MISSING');
+  console.log('  - TWILIO_FROM_NUMBER:', twilioFrom ? twilioFrom : 'MISSING');
+  
+  if (!twilioSid || !twilioToken || !twilioFrom) {
+    console.error('❌ [SMS DEBUG] Twilio env vars missing - SMS cannot be sent');
+    return 'skipped';
+  }
+  console.log('✅ [SMS DEBUG] All Twilio env vars present');
+  
+  // Check phone format
+  console.log('🔍 [SMS DEBUG] Phone format check:', phone, 'starts with +?', phone.startsWith('+'));
   if (!phone.startsWith('+')) {
-    console.warn('Phone not E.164, skipping SMS');
+    console.error('❌ [SMS DEBUG] Phone not in E.164 format, skipping SMS');
     return 'failed';
   }
+  console.log('✅ [SMS DEBUG] Phone format check passed');
+  
   try {
-    const auth = Buffer.from(
-      `${process.env.TWILIO_ACCOUNT_SID}:${process.env.TWILIO_AUTH_TOKEN}`
-    ).toString('base64');
-
-    const params = new URLSearchParams({
-      To: phone.trim(),
-      From: process.env.TWILIO_FROM_NUMBER,
-      Body: `Hi ${firstName}, welcome to the Antioch Bible Study! We're excited to have you join us.`
+    console.log('🚀 [SMS DEBUG] Starting Twilio SDK call...');
+    
+    // Initialize Twilio client
+    const client = twilio(twilioSid, twilioToken);
+    
+    const message = `Hi ${firstName}, welcome to the Antioch Bible Study! We're excited to have you join us.`;
+    console.log('🔍 [SMS DEBUG] Message content:', message);
+    
+    console.log('📡 [SMS DEBUG] Sending SMS via Twilio SDK...');
+    
+    // Send SMS using SDK
+    const messageResponse = await client.messages.create({
+      body: message,
+      from: twilioFrom,
+      to: phone.trim()
     });
 
-    const resp = await fetch(
-      `https://api.twilio.com/2010-04-01/Accounts/${process.env.TWILIO_ACCOUNT_SID}/Messages.json`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Basic ${auth}`,
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: params
-      }
-    );
-
-    if (!resp.ok) {
-      console.error('Twilio error:', await resp.text());
-      return 'failed';
-    }
-    console.log("SMS Sent", await resp.json());
+    console.log('✅ [SMS DEBUG] Twilio SMS sent successfully!');
+    console.log('✅ [SMS DEBUG] Message SID:', messageResponse.sid);
+    console.log('✅ [SMS DEBUG] Message Status:', messageResponse.status);
+    console.log('✅ [SMS DEBUG] Message Direction:', messageResponse.direction);
+    
     return 'sent';
-  } catch (e) {
-    console.error('Twilio exception:', e);
+  } catch (e: any) {
+    console.error('❌ [SMS DEBUG] Twilio SDK exception occurred:', e);
+    console.error('❌ [SMS DEBUG] Exception details:', {
+      name: e.name,
+      message: e.message,
+      code: e.code,
+      moreInfo: e.moreInfo,
+      status: e.status
+    });
     return 'failed';
   }
 }
 
 // ---- Handler ----
 export async function POST(req: NextRequest) {
+  console.log('🔥 [API DEBUG] Bible Study API called');
+  
   const body = await req.json();
-  let { firstName, lastName, email, country, phone, contactPreference, otherContactDetail } = body;
-
+  console.log('🔥 [API DEBUG] Request body received:', body);
+  
+  let { firstName, lastName, email, country, countryCode, phone, contactPreference, otherContactDetail } = body;
 
   firstName = normalizeName(firstName);
   lastName = normalizeName(lastName);
+
+  console.log('🔥 [API DEBUG] Normalized names:', { firstName, lastName });
+  console.log('🔥 [API DEBUG] Contact preference:', contactPreference);
+  console.log('🔥 [API DEBUG] Country code:', countryCode);
 
   const missing: string[] = [];
   if (!firstName) missing.push('First Name');
@@ -187,8 +228,10 @@ export async function POST(req: NextRequest) {
   if (contactPreference === 'Other' && !otherContactDetail) missing.push('Other Contact Detail');
 
   if (missing.length) {
+    console.error('❌ [API DEBUG] Missing fields:', missing);
     return NextResponse.json({ error: 'Missing fields', missing }, { status: 400 });
   }
+  console.log('✅ [API DEBUG] All required fields present');
 
   try {
     const listItems = buildListItems({
@@ -205,23 +248,33 @@ export async function POST(req: NextRequest) {
     let adminEmailStatus: 'skipped' | 'sent' | 'failed' = 'skipped';
     let userEmailStatus: 'skipped' | 'sent' | 'failed' = 'skipped';
 
+    console.log('📧 [API DEBUG] ENABLE_EMAILS:', ENABLE_EMAILS);
     if (ENABLE_EMAILS) {
       const transporter = getTransporter();
       if (!transporter) {
-        console.warn('Email transporter unavailable');
+        console.warn('⚠️ [API DEBUG] Email transporter unavailable');
       } else {
+        console.log('📧 [API DEBUG] Sending emails...');
         adminEmailStatus = await sendAdminEmail(transporter, listItems, firstName, lastName, email, phone);
         userEmailStatus = await sendUserEmail(transporter, listItems, firstName, lastName, email);
+        console.log('📧 [API DEBUG] Email statuses:', { adminEmailStatus, userEmailStatus });
       }
     }
 
-    // Conditional SMS (only if preference === SMS)
+    // Conditional SMS (only if preference === SMS AND country === US)
     let smsStatus: 'skipped' | 'sent' | 'failed' = 'skipped';
-    if (contactPreference === 'SMS') {
-      smsStatus = await sendWelcomeSMS(firstName, phone);
+    console.log('📱 [API DEBUG] Checking SMS conditions...');
+    console.log('📱 [API DEBUG] Contact preference === SMS?', contactPreference === 'SMS');
+    
+    if (contactPreference === 'SMS') {  // ✅ CHECKS SMS PREFERENCE
+      console.log('📱 [API DEBUG] SMS preference selected, calling sendWelcomeSMS...');
+      smsStatus = await sendWelcomeSMS(firstName, phone, countryCode);
+      console.log('📱 [API DEBUG] SMS function returned:', smsStatus);
+    } else {
+      console.log('📱 [API DEBUG] SMS not selected as contact preference, skipping');
     }
 
-    return NextResponse.json({
+    const response = {
       success: true,
       adminEmailStatus,
       userEmailStatus,
@@ -230,9 +283,17 @@ export async function POST(req: NextRequest) {
         emails: ENABLE_EMAILS,
         sms: ENABLE_SMS
       }
+    };
+
+    console.log('✅ [API DEBUG] Final response:', response);
+    return NextResponse.json(response);
+  } catch (e: any) {
+    console.error('❌ [API DEBUG] API error occurred:', e);
+    console.error('❌ [API DEBUG] Error details:', {
+      name: e.name,
+      message: e.message,
+      stack: e.stack
     });
-  } catch (e) {
-    console.error('API error:', e);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

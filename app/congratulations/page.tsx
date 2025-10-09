@@ -1,5 +1,6 @@
 
 
+import { Instagram } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -99,6 +100,26 @@ export default function AntiochPage() {
                 </div>
             </div>
             </section>
+
+
+        <div className="w-full my-12 lg:my-18 md:w-2xl lg:w-5xl self-center container mx-auto text-center">
+            <h1 className="text-2xl lg:text-5xl mt-0 mb-2 md:mt-8 md:mb-4 font-montserrat font-extrabold text-gray-800">Connect with us</h1>
+            <p className="text-lg md:text-xl text-gray-700 font-proza-libre max-w-2xl mx-auto">
+              You can also connect with us on the following social media platforms.
+            </p>
+            <div className="w-auto max-w-96 mx-auto mt-8 d-inline">
+            <Link
+                href="https://www.instagram.com/dabiblefoundation/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex gap-2 align-center items-center justify-center bg-[#C13584] hover:bg-[#E1306C] text-white font-semibold py-3 px-4 rounded-lg transition duration-300"
+                > 
+                    <Instagram size={18} /> Instagram
+            </Link>
+            
+
+            </div>
+        </div>
 
 
        
