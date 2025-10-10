@@ -143,7 +143,7 @@ export default function BibleStudyForm() {
           otherContactDetail: ""
         });
         setRecaptchaToken(null);
-        // router.push("/congratulations");
+        router.push("/congratulations");
       } else {
         setStatus("error");
       }
