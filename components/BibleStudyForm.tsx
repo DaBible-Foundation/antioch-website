@@ -440,6 +440,7 @@ export default function BibleStudyForm() {
             onChange={(value) => setFormData(prev => ({ ...prev, phone: value || '' }))}
             id="phone"
             name="phone"
+            inputMode="tel"
             autoComplete="tel"
             className="w-full px-4 py-3 border text-black border-gray-200 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#C8385E]/80"
           />
@@ -606,6 +607,7 @@ export default function BibleStudyForm() {
                   placeholder="Parent/Guardian Phone Number"
                   value={formData.guardianPhone}
                   onChange={handleInputChange}
+                  inputMode="tel"
                   autoComplete="section-guardian tel"
                   className="w-full px-4 py-3 border text-black border-gray-200 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#C8385E]/80 bg-white"
                   required
