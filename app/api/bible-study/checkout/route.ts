@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { syncBibleStudyRegistrationToCrm } from '@/lib/bibleStudyCrm';
+import { syncBibleStudyRegistration } from '@/lib/bibleStudyCrm';
 
 export const runtime = 'nodejs';
 
@@ -132,7 +132,7 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  const crmStatus = await syncBibleStudyRegistrationToCrm(
+  const { crmStatus, googleSheetsStatus } = await syncBibleStudyRegistration(
     {
       firstName,
       lastName,
@@ -168,5 +168,5 @@ export async function POST(req: NextRequest) {
     }
   );
 
-  return NextResponse.json({ checkoutUrl: session.url, crmStatus });
+  return NextResponse.json({ checkoutUrl: session.url, crmStatus, googleSheetsStatus });
 }

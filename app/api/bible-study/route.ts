@@ -4,7 +4,7 @@ import { emailTemplate } from '@/components/EmailTemplate';
 import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 import twilio from 'twilio';
-import { syncBibleStudyRegistrationToCrm } from '@/lib/bibleStudyCrm';
+import { syncBibleStudyRegistration } from '@/lib/bibleStudyCrm';
 
 export const runtime = "nodejs";
 
@@ -352,7 +352,7 @@ export async function POST(req: NextRequest) {
       otherContactDetail
     });
 
-    const crmStatus = await syncBibleStudyRegistrationToCrm(
+    const { crmStatus, googleSheetsStatus } = await syncBibleStudyRegistration(
       {
         firstName,
         lastName,
@@ -421,6 +421,7 @@ export async function POST(req: NextRequest) {
       userEmailStatus,
       smsStatus,
       crmStatus,
+      googleSheetsStatus,
       featureFlags: {
         emails: ENABLE_EMAILS,
         sms: ENABLE_SMS
