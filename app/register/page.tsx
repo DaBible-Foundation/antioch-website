@@ -42,13 +42,13 @@ export default function RegisterPage() {
             Current Session:
           </h3>
           <p className="text-md md:text-lg text-gray-700 mb-6">
-            We are studying the book of Hebrews, and its interesting!
+            We are studying Fear of God.
           </p>
           <Image
             width={500}
             height={500}
-            src="/designs/hebrews.jpg"
-            alt="Book of Hebrews Poster"
+            src="/designs/fear-of-god-sbs-26.png"
+            alt="Fear of God Bible Study Poster"
             className="w-full h-full object-cover rounded-lg shadow-lg"
           />
         </div>
