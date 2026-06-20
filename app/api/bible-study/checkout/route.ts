@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { syncBibleStudyRegistrationToCrm } from '@/lib/bibleStudyCrm';
 
 export const runtime = 'nodejs';
 
@@ -23,8 +24,13 @@ export async function POST(req: NextRequest) {
     email,
     country,
     countryCode,
+    dialCode,
     phone,
     address,
+    streetAddress,
+    city,
+    state,
+    zipCode,
     ageGroup,
     guardianFirstName,
     guardianLastName,
@@ -106,8 +112,13 @@ export async function POST(req: NextRequest) {
       email,
       country,
       countryCode: countryCode || '',
+      dialCode: dialCode || '',
       phone,
       address,
+      streetAddress: streetAddress || '',
+      city: city || '',
+      state: state || '',
+      zipCode: zipCode || '',
       ageGroup,
       guardianFirstName,
       guardianLastName,
@@ -121,5 +132,41 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  return NextResponse.json({ checkoutUrl: session.url });
+  const crmStatus = await syncBibleStudyRegistrationToCrm(
+    {
+      firstName,
+      lastName,
+      email,
+      country,
+      countryCode,
+      dialCode,
+      phone,
+      address,
+      streetAddress,
+      city,
+      state,
+      zipCode,
+      ageGroup,
+      guardianFirstName,
+      guardianLastName,
+      guardianPhone,
+      guardianEmail,
+      parentSignature,
+      parentConsentAccepted,
+      knowsAntioch,
+      contactPreference,
+      otherContactDetail,
+    },
+    {
+      required: true,
+      status: 'checkout_created',
+      amountCents: TEEN_REGISTRATION_FEE_CENTS,
+      currency: 'usd',
+      provider: 'stripe',
+      checkoutSessionId: session.id,
+      checkoutUrl: session.url,
+    }
+  );
+
+  return NextResponse.json({ checkoutUrl: session.url, crmStatus });
 }

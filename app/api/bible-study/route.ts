@@ -4,6 +4,7 @@ import { emailTemplate } from '@/components/EmailTemplate';
 import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 import twilio from 'twilio';
+import { syncBibleStudyRegistrationToCrm } from '@/lib/bibleStudyCrm';
 
 export const runtime = "nodejs";
 
@@ -39,8 +40,14 @@ function buildListItems(data: {
   lastName: string;
   email: string;
   country: string;
+  countryCode?: string;
+  dialCode?: string;
   phone: string;
   address: string;
+  streetAddress?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
   ageGroup: string;
   guardianFirstName?: string;
   guardianLastName?: string;
@@ -265,8 +272,13 @@ export async function POST(req: NextRequest) {
     email,
     country,
     countryCode,
+    dialCode,
     phone,
     address,
+    streetAddress,
+    city,
+    state,
+    zipCode,
     ageGroup,
     guardianFirstName,
     guardianLastName,
@@ -320,8 +332,14 @@ export async function POST(req: NextRequest) {
       lastName,
       email,
       country,
+      countryCode,
+      dialCode,
       phone,
       address,
+      streetAddress,
+      city,
+      state,
+      zipCode,
       ageGroup,
       guardianFirstName,
       guardianLastName,
@@ -333,6 +351,39 @@ export async function POST(req: NextRequest) {
       contactPreference,
       otherContactDetail
     });
+
+    const crmStatus = await syncBibleStudyRegistrationToCrm(
+      {
+        firstName,
+        lastName,
+        email,
+        country,
+        countryCode,
+        dialCode,
+        phone,
+        address,
+        streetAddress,
+        city,
+        state,
+        zipCode,
+        ageGroup,
+        guardianFirstName,
+        guardianLastName,
+        guardianPhone,
+        guardianEmail,
+        parentSignature,
+        parentConsentAccepted,
+        knowsAntioch,
+        contactPreference,
+        otherContactDetail,
+      },
+      {
+        required: false,
+        status: 'free',
+        amountCents: 0,
+        currency: 'usd',
+      }
+    );
 
     // Email statuses
     let adminEmailStatus: 'skipped' | 'sent' | 'failed' = 'skipped';
@@ -369,6 +420,7 @@ export async function POST(req: NextRequest) {
       adminEmailStatus,
       userEmailStatus,
       smsStatus,
+      crmStatus,
       featureFlags: {
         emails: ENABLE_EMAILS,
         sms: ENABLE_SMS
