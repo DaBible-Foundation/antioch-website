@@ -335,7 +335,7 @@ export default function BibleStudyForm() {
         We look forward to meeting you, register to join our Daily Bible Study
       </p>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6" autoComplete="on">
         <div className='flex flex-col sm:flex-row gap-4 w-full'>
           <div className='w-full'>
             <label htmlFor="firstName" className="block sr-only">First name</label>
@@ -346,6 +346,7 @@ export default function BibleStudyForm() {
               placeholder="First Name"
               value={formData.firstName}
               onChange={handleInputChange}
+              autoComplete="given-name"
               className="w-full px-4 py-3 border text-black border-gray-200 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#C8385E]/80"
               required
             />
@@ -359,6 +360,7 @@ export default function BibleStudyForm() {
               placeholder="Last Name"
               value={formData.lastName}
               onChange={handleInputChange}
+              autoComplete="family-name"
               className="w-full px-4 py-3 border text-black border-gray-200 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#C8385E]/80"
               required
             />
@@ -374,6 +376,7 @@ export default function BibleStudyForm() {
             placeholder="Email"
             value={formData.email}
             onChange={handleInputChange}
+            autoComplete="email"
             className="w-full px-4 py-3 border text-black border-gray-200 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#C8385E]/80"
             required
           />
@@ -435,6 +438,9 @@ export default function BibleStudyForm() {
             }
             value={formData.phone}
             onChange={(value) => setFormData(prev => ({ ...prev, phone: value || '' }))}
+            id="phone"
+            name="phone"
+            autoComplete="tel"
             className="w-full px-4 py-3 border text-black border-gray-200 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#C8385E]/80"
           />
         </div>
@@ -570,6 +576,7 @@ export default function BibleStudyForm() {
                   placeholder="Parent/Guardian First Name"
                   value={formData.guardianFirstName}
                   onChange={handleInputChange}
+                  autoComplete="section-guardian given-name"
                   className="w-full px-4 py-3 border text-black border-gray-200 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#C8385E]/80 bg-white"
                   required
                 />
@@ -583,6 +590,7 @@ export default function BibleStudyForm() {
                   placeholder="Parent/Guardian Last Name"
                   value={formData.guardianLastName}
                   onChange={handleInputChange}
+                  autoComplete="section-guardian family-name"
                   className="w-full px-4 py-3 border text-black border-gray-200 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#C8385E]/80 bg-white"
                   required
                 />
@@ -598,6 +606,7 @@ export default function BibleStudyForm() {
                   placeholder="Parent/Guardian Phone Number"
                   value={formData.guardianPhone}
                   onChange={handleInputChange}
+                  autoComplete="section-guardian tel"
                   className="w-full px-4 py-3 border text-black border-gray-200 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#C8385E]/80 bg-white"
                   required
                 />
@@ -611,6 +620,7 @@ export default function BibleStudyForm() {
                   placeholder="Parent/Guardian Email"
                   value={formData.guardianEmail}
                   onChange={handleInputChange}
+                  autoComplete="section-guardian email"
                   className="w-full px-4 py-3 border text-black border-gray-200 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#C8385E]/80 bg-white"
                   required
                 />
