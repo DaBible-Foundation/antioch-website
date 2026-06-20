@@ -68,6 +68,8 @@ function getAgeGroupSlug(ageGroup: string) {
 function getIdempotencyKey(input: BibleStudyRegistrationInput, payment: BibleStudyCrmPayment) {
   const rawKey = [
     "antioch-bible-study",
+    input.firstName.trim().toLowerCase(),
+    input.lastName.trim().toLowerCase(),
     input.email.trim().toLowerCase(),
     input.phone.trim(),
     getAgeGroupSlug(input.ageGroup),

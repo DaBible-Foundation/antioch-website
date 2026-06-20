@@ -35,8 +35,6 @@ export default function RegisterPage() {
       </div>
 
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-8 content-stretch items-center">
-        <ClientBibleStudyForm />
-
         <div className="w-full mx-auto items-stretch lg:h-full text-center justify-center">
           <h3 className="text-2xl md:text-4xl text-gray-900 mb-4 font-montserrat font-extrabold">
             Current Session:
@@ -49,6 +47,8 @@ export default function RegisterPage() {
             className="w-full h-full object-cover rounded-lg shadow-lg"
           />
         </div>
+
+        <ClientBibleStudyForm />
       </div>
     </main>
   );

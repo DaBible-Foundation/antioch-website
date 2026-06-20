@@ -14,6 +14,12 @@ const ENABLE_SMS = process.env.ENABLE_BIBLE_STUDY_SMS === 'true';
 
 // ---- Helpers ----
 type ListItem = { label: string; value: string };
+type Participant = {
+  firstName: string;
+  lastName: string;
+  email?: string;
+  phone?: string;
+};
 
 const TEEN_AGE_GROUP = 'Teens (ages 12-15)';
 const YOUNG_ADULT_AGE_GROUP = 'Young Adults (ages 16-18)';
@@ -22,9 +28,45 @@ const ONBOARDING_WHATSAPP_URL = 'https://chat.whatsapp.com/FGA9UkTb1mY0MnFGCgHTG
 const TEENS_WHATSAPP_URL = 'https://chat.whatsapp.com/Cv7HVeyEKPQ2Le61HSR3V8?s=cl&p=i&ilr=4';
 const YOUNG_ADULTS_WHATSAPP_URL = 'https://chat.whatsapp.com/FmeLlLWIwgZ0H1lw58vECR?s=cl&p=i&ilr=4';
 const ADULTS_WHATSAPP_URL = 'https://chat.whatsapp.com/FmeLlLWIwgZ0H1lw58vECR?s=cl&p=i&ilr=4';
+const MAX_TEEN_PARTICIPANTS = 5;
 
 function normalizeName(name: string) {
   return name ? name.charAt(0).toUpperCase() + name.slice(1).toLowerCase() : '';
+}
+
+function getStringValue(value: unknown) {
+  return typeof value === 'string' ? value : '';
+}
+
+function getParticipants(body: Record<string, unknown>): Participant[] {
+  if (Array.isArray(body.participants)) {
+    return body.participants
+      .slice(0, MAX_TEEN_PARTICIPANTS)
+      .map((participant) => {
+        const participantRecord = participant && typeof participant === 'object'
+          ? participant as Record<string, unknown>
+          : {};
+
+        return {
+          firstName: normalizeName(getStringValue(participantRecord.firstName)),
+          lastName: normalizeName(getStringValue(participantRecord.lastName)),
+          email: getStringValue(participantRecord.email) || getStringValue(body.guardianEmail) || getStringValue(body.email),
+          phone: getStringValue(participantRecord.phone) || getStringValue(body.guardianPhone) || getStringValue(body.phone),
+        };
+      })
+      .filter((participant: Participant) => participant.firstName && participant.lastName);
+  }
+
+  const firstName = normalizeName(getStringValue(body.firstName));
+  const lastName = normalizeName(getStringValue(body.lastName));
+  return firstName && lastName
+    ? [{
+        firstName,
+        lastName,
+        email: getStringValue(body.email) || getStringValue(body.guardianEmail),
+        phone: getStringValue(body.phone) || getStringValue(body.guardianPhone),
+      }]
+    : [];
 }
 
 function getWhatsAppGroupUrl(ageGroup: string, knowsAntioch?: string) {
@@ -263,7 +305,7 @@ async function sendWelcomeSMS(firstName: string, phone: string, countryCode: str
 export async function POST(req: NextRequest) {
   console.log('🔥 [API DEBUG] Bible Study API called');
   
-  const body = await req.json();
+  const body = await req.json() as any;
   console.log('🔥 [API DEBUG] Request body received:', body);
   
   let {
@@ -292,23 +334,33 @@ export async function POST(req: NextRequest) {
     recaptchaToken
   } = body;
 
-  firstName = normalizeName(firstName);
-  lastName = normalizeName(lastName);
+  const participants = getParticipants(body);
+  const isTeenRegistration = ageGroup === TEEN_AGE_GROUP;
+  const primaryParticipant = participants[0];
+
+  firstName = isTeenRegistration ? primaryParticipant?.firstName || '' : normalizeName(firstName);
+  lastName = isTeenRegistration ? primaryParticipant?.lastName || '' : normalizeName(lastName);
+  email = isTeenRegistration ? guardianEmail || email : email;
+  phone = isTeenRegistration ? guardianPhone || phone : phone;
 
   console.log('🔥 [API DEBUG] Normalized names:', { firstName, lastName });
   console.log('🔥 [API DEBUG] Contact preference:', contactPreference);
   console.log('🔥 [API DEBUG] Country code:', countryCode);
 
   const missing: string[] = [];
-  if (!firstName) missing.push('First Name');
-  if (!lastName) missing.push('Last Name');
-  if (!email) missing.push('Email');
+  if (isTeenRegistration) {
+    if (!participants.length) missing.push('At least one child');
+  } else {
+    if (!firstName) missing.push('First Name');
+    if (!lastName) missing.push('Last Name');
+    if (!email) missing.push('Email');
+    if (!phone) missing.push('Phone');
+  }
   if (!country) missing.push('Country');
-  if (!phone) missing.push('Phone');
   if (!address) missing.push('Address');
   if (!ageGroup) missing.push('Age Group');
   if (!knowsAntioch) missing.push('Antioch or DaBible Foundation Familiarity');
-  if (ageGroup === TEEN_AGE_GROUP) {
+  if (isTeenRegistration) {
     if (!guardianFirstName) missing.push('Parent/Guardian First Name');
     if (!guardianLastName) missing.push('Parent/Guardian Last Name');
     if (!guardianPhone) missing.push('Parent/Guardian Phone');
@@ -352,38 +404,51 @@ export async function POST(req: NextRequest) {
       otherContactDetail
     });
 
-    const { crmStatus, googleSheetsStatus } = await syncBibleStudyRegistration(
-      {
-        firstName,
-        lastName,
-        email,
-        country,
-        countryCode,
-        dialCode,
-        phone,
-        address,
-        streetAddress,
-        city,
-        state,
-        zipCode,
-        ageGroup,
-        guardianFirstName,
-        guardianLastName,
-        guardianPhone,
-        guardianEmail,
-        parentSignature,
-        parentConsentAccepted,
-        knowsAntioch,
-        contactPreference,
-        otherContactDetail,
-      },
-      {
-        required: false,
-        status: 'free',
-        amountCents: 0,
-        currency: 'usd',
-      }
-    );
+    const syncParticipants = isTeenRegistration
+      ? participants
+      : [{ firstName, lastName, email, phone }];
+
+    const syncStatuses = await Promise.all(syncParticipants.map((participant) => (
+      syncBibleStudyRegistration(
+        {
+          firstName: participant.firstName,
+          lastName: participant.lastName,
+          email: participant.email || email,
+          country,
+          countryCode,
+          dialCode,
+          phone: participant.phone || phone,
+          address,
+          streetAddress,
+          city,
+          state,
+          zipCode,
+          ageGroup,
+          guardianFirstName,
+          guardianLastName,
+          guardianPhone,
+          guardianEmail,
+          parentSignature,
+          parentConsentAccepted,
+          knowsAntioch,
+          contactPreference,
+          otherContactDetail,
+        },
+        {
+          required: false,
+          status: 'free',
+          amountCents: 0,
+          currency: 'usd',
+        }
+      )
+    )));
+
+    const crmStatus = syncStatuses.every((status) => status.crmStatus.status === 'sent' || status.crmStatus.status === 'skipped')
+      ? syncStatuses[0]?.crmStatus || { status: 'skipped' as const }
+      : { status: 'failed' as const, message: 'One or more participant CRM syncs did not complete' };
+    const googleSheetsStatus = syncStatuses.every((status) => status.googleSheetsStatus.status === 'sent' || status.googleSheetsStatus.status === 'skipped')
+      ? syncStatuses[0]?.googleSheetsStatus || { status: 'skipped' as const }
+      : { status: 'failed' as const, message: 'One or more participant Google Sheets syncs did not complete' };
 
     // Email statuses
     let adminEmailStatus: 'skipped' | 'sent' | 'failed' = 'skipped';

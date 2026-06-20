@@ -6,6 +6,16 @@ export const runtime = 'nodejs';
 
 const TEEN_AGE_GROUP = 'Teens (ages 12-15)';
 const TEEN_REGISTRATION_FEE_CENTS = 5000;
+const MAX_TEEN_PARTICIPANTS = 5;
+
+type Participant = {
+  firstName: string;
+  lastName: string;
+  email?: string;
+  phone?: string;
+};
+
+type CheckoutRequestBody = Record<string, unknown>;
 
 function normalizeName(name: string) {
   return name ? name.charAt(0).toUpperCase() + name.slice(1).toLowerCase() : '';
@@ -16,6 +26,41 @@ function getAgeGroupParam(ageGroup: string) {
   if (ageGroup === 'Young Adults (ages 16-18)') return 'young-adults';
   if (ageGroup === 'Adults (18 years and older)') return 'adults';
   return '';
+}
+
+function getStringValue(value: unknown) {
+  return typeof value === 'string' ? value : '';
+}
+
+function getParticipants(body: CheckoutRequestBody): Participant[] {
+  if (Array.isArray(body.participants)) {
+    return body.participants
+      .slice(0, MAX_TEEN_PARTICIPANTS)
+      .map((participant) => {
+        const participantRecord = participant && typeof participant === 'object'
+          ? participant as Record<string, unknown>
+          : {};
+
+        return {
+          firstName: normalizeName(getStringValue(participantRecord.firstName)),
+          lastName: normalizeName(getStringValue(participantRecord.lastName)),
+          email: getStringValue(participantRecord.email) || getStringValue(body.guardianEmail) || getStringValue(body.email),
+          phone: getStringValue(participantRecord.phone) || getStringValue(body.guardianPhone) || getStringValue(body.phone),
+        };
+      })
+      .filter((participant: Participant) => participant.firstName && participant.lastName);
+  }
+
+  const firstName = normalizeName(getStringValue(body.firstName));
+  const lastName = normalizeName(getStringValue(body.lastName));
+  return firstName && lastName
+    ? [{
+        firstName,
+        lastName,
+        email: getStringValue(body.email) || getStringValue(body.guardianEmail),
+        phone: getStringValue(body.phone) || getStringValue(body.guardianPhone),
+      }]
+    : [];
 }
 
 export async function POST(req: NextRequest) {
@@ -41,18 +86,19 @@ export async function POST(req: NextRequest) {
     knowsAntioch,
     contactPreference,
     otherContactDetail,
+    discountCode,
     recaptchaToken
   } = body;
 
-  const firstName = normalizeName(body.firstName);
-  const lastName = normalizeName(body.lastName);
+  const participants = getParticipants(body);
+  const primaryParticipant = participants[0];
+  const firstName = primaryParticipant?.firstName || '';
+  const lastName = primaryParticipant?.lastName || '';
+  const participantCount = participants.length;
 
   const missing: string[] = [];
-  if (!firstName) missing.push('First Name');
-  if (!lastName) missing.push('Last Name');
-  if (!email) missing.push('Email');
+  if (!participantCount) missing.push('At least one child');
   if (!country) missing.push('Country');
-  if (!phone) missing.push('Phone');
   if (!address) missing.push('Address');
   if (ageGroup !== TEEN_AGE_GROUP) missing.push('Teen Age Group');
   if (countryCode !== 'US') missing.push('United States country selection');
@@ -79,6 +125,26 @@ export async function POST(req: NextRequest) {
     apiVersion: '2025-04-30.basil',
   });
 
+  const normalizedDiscountCode = typeof discountCode === 'string' ? discountCode.trim() : '';
+  let promotionCodeId: string | undefined;
+
+  if (normalizedDiscountCode) {
+    const promotionCodes = await stripe.promotionCodes.list({
+      code: normalizedDiscountCode,
+      active: true,
+      limit: 1,
+    });
+
+    promotionCodeId = promotionCodes.data[0]?.id;
+
+    if (!promotionCodeId) {
+      return NextResponse.json(
+        { error: 'This discount code is not valid or is no longer active.' },
+        { status: 400 }
+      );
+    }
+  }
+
   const origin = req.nextUrl.origin;
   const successParams = new URLSearchParams({
     registration: 'teen',
@@ -90,12 +156,13 @@ export async function POST(req: NextRequest) {
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',
     customer_email: email,
-    allow_promotion_codes: true,
+    allow_promotion_codes: promotionCodeId ? undefined : true,
+    discounts: promotionCodeId ? [{ promotion_code: promotionCodeId }] : undefined,
     success_url: `${origin}/congratulations?${successParams.toString()}&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/register`,
     line_items: [
       {
-        quantity: 1,
+        quantity: participantCount,
         price_data: {
           currency: 'usd',
           unit_amount: TEEN_REGISTRATION_FEE_CENTS,
@@ -110,17 +177,19 @@ export async function POST(req: NextRequest) {
       registrationType: 'bible-study',
       firstName,
       lastName,
-      email,
+      email: guardianEmail || email || '',
       country,
       countryCode: countryCode || '',
       dialCode: dialCode || '',
-      phone,
+      phone: guardianPhone || phone || '',
       address,
       streetAddress: streetAddress || '',
       city: city || '',
       state: state || '',
       zipCode: zipCode || '',
       ageGroup,
+      participantCount: String(participantCount),
+      participantNames: participants.map((participant) => `${participant.firstName} ${participant.lastName}`).join(', '),
       guardianFirstName,
       guardianLastName,
       guardianPhone,
@@ -130,44 +199,54 @@ export async function POST(req: NextRequest) {
       knowsAntioch,
       contactPreference,
       otherContactDetail: otherContactDetail || '',
+      discountCode: normalizedDiscountCode,
     },
   });
 
-  const { crmStatus, googleSheetsStatus } = await syncBibleStudyRegistration(
-    {
-      firstName,
-      lastName,
-      email,
-      country,
-      countryCode,
-      dialCode,
-      phone,
-      address,
-      streetAddress,
-      city,
-      state,
-      zipCode,
-      ageGroup,
-      guardianFirstName,
-      guardianLastName,
-      guardianPhone,
-      guardianEmail,
-      parentSignature,
-      parentConsentAccepted,
-      knowsAntioch,
-      contactPreference,
-      otherContactDetail,
-    },
-    {
-      required: true,
-      status: 'checkout_created',
-      amountCents: TEEN_REGISTRATION_FEE_CENTS,
-      currency: 'usd',
-      provider: 'stripe',
-      checkoutSessionId: session.id,
-      checkoutUrl: session.url,
-    }
-  );
+  const syncStatuses = await Promise.all(participants.map((participant) => (
+    syncBibleStudyRegistration(
+      {
+        firstName: participant.firstName,
+        lastName: participant.lastName,
+        email: guardianEmail || participant.email || email || '',
+        country,
+        countryCode,
+        dialCode,
+        phone: guardianPhone || participant.phone || phone || '',
+        address,
+        streetAddress,
+        city,
+        state,
+        zipCode,
+        ageGroup,
+        guardianFirstName,
+        guardianLastName,
+        guardianPhone,
+        guardianEmail,
+        parentSignature,
+        parentConsentAccepted,
+        knowsAntioch,
+        contactPreference,
+        otherContactDetail,
+      },
+      {
+        required: true,
+        status: 'checkout_created',
+        amountCents: TEEN_REGISTRATION_FEE_CENTS,
+        currency: 'usd',
+        provider: 'stripe',
+        checkoutSessionId: session.id,
+        checkoutUrl: session.url,
+      }
+    )
+  )));
 
-  return NextResponse.json({ checkoutUrl: session.url, crmStatus, googleSheetsStatus });
+  const crmStatus = syncStatuses.every((status) => status.crmStatus.status === 'sent' || status.crmStatus.status === 'skipped')
+    ? syncStatuses[0]?.crmStatus || { status: 'skipped' as const }
+    : { status: 'failed' as const, message: 'One or more child CRM syncs did not complete' };
+  const googleSheetsStatus = syncStatuses.every((status) => status.googleSheetsStatus.status === 'sent' || status.googleSheetsStatus.status === 'skipped')
+    ? syncStatuses[0]?.googleSheetsStatus || { status: 'skipped' as const }
+    : { status: 'failed' as const, message: 'One or more child Google Sheets syncs did not complete' };
+
+  return NextResponse.json({ checkoutUrl: session.url, crmStatus, googleSheetsStatus, participantCount });
 }
