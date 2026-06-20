@@ -2,11 +2,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react/no-unescaped-entities */
 "use client"
-import PhoneInput from 'react-phone-number-input/input';
+import PhoneInput, { getCountries, getCountryCallingCode } from 'react-phone-number-input/input';
 import 'react-phone-number-input/style.css';
 import Select from 'react-select';
 import ReCAPTCHA from "react-google-recaptcha";
-import { useState, useEffect } from "react";
+import * as ct from 'countries-and-timezones';
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from 'next/navigation';
 import Link from "next/link";
 
@@ -17,81 +18,132 @@ type CountryOption = {
   countryCode: string;
 };
 
-const NANP_COUNTRIES = new Set([
-  'US','CA','AG','AI','AS','BB','BM','BS','DM','DO','GD','GU','JM','KN','KY','LC','MP','MS','PR','SX','TC','TT','VC','VG','VI'
-]);
+const RECAPTCHA_TEST_SITE_KEY = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI";
+const RECAPTCHA_PRODUCTION_SITE_KEY = "6LdFrEwrAAAAANVypGG4w4jpPR6SC-oEEq8hNraj";
 
-// Explicit overrides if restcountries ever returns something odd
-const DIAL_CODE_OVERRIDES: Record<string,string> = {
-  US: '+1',
-  CA: '+1',
-  GB: '+44',
-  AU: '+61',
-  NZ: '+64'
-};
+function getRecaptchaSiteKey() {
+  if (process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY) {
+    return process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+  }
 
-function resolveDialCode(countryCode: string, root?: string, suffixes?: string[]): string {
-  if (!root) return '';
-  if (DIAL_CODE_OVERRIDES[countryCode]) return DIAL_CODE_OVERRIDES[countryCode];
-  if (NANP_COUNTRIES.has(countryCode)) return root; // All NANP share +1
-  if (suffixes && suffixes.length === 1) {
-    return `${root}${suffixes[0]}`;
+  if (process.env.NODE_ENV !== "production") {
+    return RECAPTCHA_TEST_SITE_KEY;
   }
-  // For most others, if multiple suffixes exist, the root alone is not a dial code.
-  // We choose the first suffix that produces a known-style code (heuristic).
-  if (suffixes && suffixes.length > 1) {
-    // Prefer the shortest suffix if lengths vary (often the main assignment)
-    const shortest = [...suffixes].sort((a,b) => a.length - b.length)[0];
-    return `${root}${shortest}`;
+
+  if (typeof window !== "undefined" && ["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+    return RECAPTCHA_TEST_SITE_KEY;
   }
-  return root;
+
+  return RECAPTCHA_PRODUCTION_SITE_KEY;
 }
 
+const DEFAULT_FORM_DATA = {
+  firstName: "",
+  lastName: "",
+  email: "",
+  countryCode: "US",
+  countryName: "United States of America",
+  dialCode: "+1",
+  phone: "",
+  streetAddress: "",
+  city: "",
+  state: "",
+  zipCode: "",
+  ageGroup: "",
+  guardianFirstName: "",
+  guardianLastName: "",
+  guardianPhone: "",
+  guardianEmail: "",
+  parentSignature: "",
+  parentConsentAccepted: false,
+  contactPreference: "",
+  otherContactDetail: ""
+};
+
+const TEEN_AGE_GROUP = "Teens (ages 12-15)";
+const US_STATES = [
+  ["AL", "Alabama"],
+  ["AK", "Alaska"],
+  ["AZ", "Arizona"],
+  ["AR", "Arkansas"],
+  ["CA", "California"],
+  ["CO", "Colorado"],
+  ["CT", "Connecticut"],
+  ["DE", "Delaware"],
+  ["FL", "Florida"],
+  ["GA", "Georgia"],
+  ["HI", "Hawaii"],
+  ["ID", "Idaho"],
+  ["IL", "Illinois"],
+  ["IN", "Indiana"],
+  ["IA", "Iowa"],
+  ["KS", "Kansas"],
+  ["KY", "Kentucky"],
+  ["LA", "Louisiana"],
+  ["ME", "Maine"],
+  ["MD", "Maryland"],
+  ["MA", "Massachusetts"],
+  ["MI", "Michigan"],
+  ["MN", "Minnesota"],
+  ["MS", "Mississippi"],
+  ["MO", "Missouri"],
+  ["MT", "Montana"],
+  ["NE", "Nebraska"],
+  ["NV", "Nevada"],
+  ["NH", "New Hampshire"],
+  ["NJ", "New Jersey"],
+  ["NM", "New Mexico"],
+  ["NY", "New York"],
+  ["NC", "North Carolina"],
+  ["ND", "North Dakota"],
+  ["OH", "Ohio"],
+  ["OK", "Oklahoma"],
+  ["OR", "Oregon"],
+  ["PA", "Pennsylvania"],
+  ["RI", "Rhode Island"],
+  ["SC", "South Carolina"],
+  ["SD", "South Dakota"],
+  ["TN", "Tennessee"],
+  ["TX", "Texas"],
+  ["UT", "Utah"],
+  ["VT", "Vermont"],
+  ["VA", "Virginia"],
+  ["WA", "Washington"],
+  ["WV", "West Virginia"],
+  ["WI", "Wisconsin"],
+  ["WY", "Wyoming"],
+  ["DC", "District of Columbia"],
+];
+
 export default function BibleStudyForm() {
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    countryCode: "",     // ISO (unique)
-    countryName: "",
-    dialCode: "",        // NEW: store dial code separately
-    phone: "",
-    contactPreference: "",
-    otherContactDetail: ""
-  });
+  const [formData, setFormData] = useState(DEFAULT_FORM_DATA);
 
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
-  const [countries, setCountries] = useState<CountryOption[]>([]);
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const signatureCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const isDrawingSignature = useRef(false);
   const router = useRouter();
 
-  useEffect(() => {
-    fetch('https://restcountries.com/v3.1/all?fields=name,idd,cca2')
-      .then(res => res.json())
-      .then((data) => {
-        const formatted: CountryOption[] = data
-          .map((c: any) => {
-            const name = c?.name?.common;
-            const root = c?.idd?.root;               // e.g. "+1" or "+2"
-            const suffixes: string[] | undefined = c?.idd?.suffixes;
-            const countryCode: string = c?.cca2;
-            if (!name || !countryCode || !root) return null;
+  const countries = useMemo<CountryOption[]>(() => {
+    return getCountries()
+      .reduce<CountryOption[]>((options, countryCode) => {
+        const country = ct.getCountry(countryCode);
+        if (!country?.name) return options;
 
-            const dialCode = resolveDialCode(countryCode, root, suffixes);
-            if (!dialCode) return null;
+        const flag = countryCode
+          .toUpperCase()
+          .replace(/./g, (ch: string) => String.fromCodePoint(127397 + ch.charCodeAt(0)));
 
-            const flag = countryCode
-              .toUpperCase()
-              .replace(/./g, (ch: string) => String.fromCodePoint(127397 + ch.charCodeAt(0)));
+        options.push({
+          name: country.name,
+          dialCode: `+${getCountryCallingCode(countryCode)}`,
+          flag,
+          countryCode,
+        });
 
-            return { name, dialCode, flag, countryCode };
-          })
-          .filter(Boolean)
-          .sort((a: any, b: any) => a.name.localeCompare(b.name));
-
-        setCountries(formatted);
-      })
-      .catch(err => console.error("Failed to fetch countries", err));
+        return options;
+      }, [])
+      .sort((a, b) => a.name.localeCompare(b.name));
   }, []);
 
   const handleInputChange = (
@@ -101,9 +153,139 @@ export default function BibleStudyForm() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const getSignaturePoint = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    const canvas = signatureCanvasRef.current;
+    if (!canvas) return null;
+
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: ((event.clientX - rect.left) / rect.width) * canvas.width,
+      y: ((event.clientY - rect.top) / rect.height) * canvas.height,
+    };
+  };
+
+  const saveSignature = () => {
+    const canvas = signatureCanvasRef.current;
+    if (!canvas) return;
+
+    setFormData(prev => ({
+      ...prev,
+      parentSignature: canvas.toDataURL("image/png"),
+    }));
+  };
+
+  const startSignature = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    const canvas = signatureCanvasRef.current;
+    const point = getSignaturePoint(event);
+    if (!canvas || !point) return;
+
+    const context = canvas.getContext("2d");
+    if (!context) return;
+
+    isDrawingSignature.current = true;
+    canvas.setPointerCapture(event.pointerId);
+    context.beginPath();
+    context.moveTo(point.x, point.y);
+  };
+
+  const drawSignature = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!isDrawingSignature.current) return;
+
+    const canvas = signatureCanvasRef.current;
+    const point = getSignaturePoint(event);
+    if (!canvas || !point) return;
+
+    const context = canvas.getContext("2d");
+    if (!context) return;
+
+    context.lineWidth = 3;
+    context.lineCap = "round";
+    context.lineJoin = "round";
+    context.strokeStyle = "#111827";
+    context.lineTo(point.x, point.y);
+    context.stroke();
+  };
+
+  const endSignature = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!isDrawingSignature.current) return;
+
+    isDrawingSignature.current = false;
+    signatureCanvasRef.current?.releasePointerCapture(event.pointerId);
+    saveSignature();
+  };
+
+  const clearSignature = () => {
+    const canvas = signatureCanvasRef.current;
+    if (!canvas) return;
+
+    const context = canvas.getContext("2d");
+    context?.clearRect(0, 0, canvas.width, canvas.height);
+    setFormData(prev => ({ ...prev, parentSignature: "" }));
+  };
+
+  const formattedAddress = [
+    formData.streetAddress.trim(),
+    formData.city.trim(),
+    [formData.state, formData.zipCode.trim()].filter(Boolean).join(" "),
+  ].filter(Boolean).join(", ");
+  const isUnitedStates = formData.countryCode === "US";
+  const isTeenRegistration = formData.ageGroup === TEEN_AGE_GROUP;
+  const isPaidTeenRegistration = isTeenRegistration && isUnitedStates;
+
+  const registrationPayload = {
+    firstName: formData.firstName.charAt(0).toUpperCase() + formData.firstName.slice(1).toLowerCase(),
+    lastName: formData.lastName.charAt(0).toUpperCase() + formData.lastName.slice(1).toLowerCase(),
+    email: formData.email,
+    country: formData.countryName,
+    countryCode: formData.countryCode,
+    dialCode: formData.dialCode,
+    phone: formData.phone,
+    address: formattedAddress,
+    ageGroup: formData.ageGroup,
+    guardianFirstName: formData.guardianFirstName,
+    guardianLastName: formData.guardianLastName,
+    guardianPhone: formData.guardianPhone,
+    guardianEmail: formData.guardianEmail,
+    parentSignature: formData.parentSignature,
+    parentConsentAccepted: formData.parentConsentAccepted,
+    contactPreference: formData.contactPreference,
+    otherContactDetail: formData.otherContactDetail,
+    recaptchaToken,
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus("submitting");
+
+    const missingFields: string[] = [];
+    if (!formData.firstName.trim()) missingFields.push("First name");
+    if (!formData.lastName.trim()) missingFields.push("Last name");
+    if (!formData.email.trim()) missingFields.push("Email");
+    if (!formData.countryCode) missingFields.push("Country");
+    if (!formData.phone.trim()) missingFields.push("Phone number");
+    if (!formData.streetAddress.trim()) missingFields.push("Street address");
+    if (!formData.city.trim()) missingFields.push("City");
+    if (!formData.state.trim()) missingFields.push(isUnitedStates ? "State" : "State, province, or region");
+    if (!formData.zipCode.trim()) missingFields.push(isUnitedStates ? "ZIP code" : "Postal code");
+    if (!formData.ageGroup) missingFields.push("Age group");
+    if (isTeenRegistration) {
+      if (!formData.guardianFirstName.trim()) missingFields.push("Parent or guardian first name");
+      if (!formData.guardianLastName.trim()) missingFields.push("Parent or guardian last name");
+      if (!formData.guardianPhone.trim()) missingFields.push("Parent or guardian phone number");
+      if (!formData.guardianEmail.trim()) missingFields.push("Parent or guardian email");
+      if (!formData.parentSignature.trim()) missingFields.push("Parent or guardian signature");
+      if (!formData.parentConsentAccepted) missingFields.push("Parent or guardian consent");
+    }
+    if (!formData.contactPreference) missingFields.push("Preferred contact method");
+    if (formData.contactPreference === "Other" && !formData.otherContactDetail.trim()) {
+      missingFields.push("Other contact method");
+    }
+
+    if (missingFields.length) {
+      alert(`Please complete: ${missingFields.join(", ")}.`);
+      setStatus("idle");
+      return;
+    }
 
     if (!recaptchaToken) {
       alert("Please verify you are not a robot.");
@@ -112,36 +294,24 @@ export default function BibleStudyForm() {
     }
 
     try {
-      const response = await fetch("/api/bible-study", {
+      const endpoint = isPaidTeenRegistration
+        ? "/api/bible-study/checkout"
+        : "/api/bible-study";
+
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          firstName: formData.firstName.charAt(0).toUpperCase() + formData.firstName.slice(1).toLowerCase(),
-          lastName: formData.lastName.charAt(0).toUpperCase() + formData.lastName.slice(1).toLowerCase(),
-          email: formData.email,
-          country: formData.countryName,
-          countryCode: formData.countryCode,
-          dialCode: formData.dialCode,
-          phone: formData.phone,
-          contactPreference: formData.contactPreference,
-          otherContactDetail: formData.otherContactDetail, 
-          recaptchaToken,
-        }),
+        body: JSON.stringify(registrationPayload),
       });
 
       if (response.ok) {
+        const result = await response.json();
+        if (result.checkoutUrl) {
+          window.location.href = result.checkoutUrl;
+          return;
+        }
         setStatus("success");
-        setFormData({
-          firstName: "",
-          lastName: "",
-          email: "",
-          countryCode: "",
-          countryName: "",
-          dialCode: "",
-          phone: "",
-          contactPreference: "",
-          otherContactDetail: ""
-        });
+        setFormData(DEFAULT_FORM_DATA);
         setRecaptchaToken(null);
         router.push("/congratulations");
       } else {
@@ -242,6 +412,8 @@ export default function BibleStudyForm() {
                 countryCode: option?.countryCode || '',
                 countryName: option?.plainName || '',
                 dialCode: option?.dialCode || '',
+                state: '',
+                zipCode: '',
               }));
             }}
             placeholder="Select your country"
@@ -266,6 +438,230 @@ export default function BibleStudyForm() {
             className="w-full px-4 py-3 border text-black border-gray-200 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#C8385E]/80"
           />
         </div>
+
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="streetAddress" className="block sr-only">Street Address</label>
+            <input
+              type="text"
+              id="streetAddress"
+              name="streetAddress"
+              placeholder="Street Address"
+              value={formData.streetAddress}
+              onChange={handleInputChange}
+              autoComplete="address-line1"
+              className="w-full px-4 py-3 border text-black border-gray-200 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#C8385E]/80"
+              required
+            />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-[1fr_120px_140px] gap-4">
+            <div>
+              <label htmlFor="city" className="block sr-only">City</label>
+              <input
+                type="text"
+                id="city"
+                name="city"
+                placeholder="City"
+                value={formData.city}
+                onChange={handleInputChange}
+                autoComplete="address-level2"
+                className="w-full px-4 py-3 border text-black border-gray-200 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#C8385E]/80"
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="state" className="block sr-only">
+                {isUnitedStates ? "State" : "State, Province, or Region"}
+              </label>
+              {isUnitedStates ? (
+                <select
+                  id="state"
+                  name="state"
+                  value={formData.state}
+                  onChange={handleInputChange}
+                  autoComplete="address-level1"
+                  className="w-full px-4 py-3 border text-black border-gray-200 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#C8385E]/80 bg-white"
+                  required
+                >
+                  <option value="" disabled>State</option>
+                  {US_STATES.map(([abbreviation, name]) => (
+                    <option key={abbreviation} value={abbreviation}>
+                      {abbreviation} - {name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  id="state"
+                  name="state"
+                  placeholder="State / Province / Region"
+                  value={formData.state}
+                  onChange={handleInputChange}
+                  autoComplete="address-level1"
+                  className="w-full px-4 py-3 border text-black border-gray-200 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#C8385E]/80"
+                  required
+                />
+              )}
+            </div>
+            <div>
+              <label htmlFor="zipCode" className="block sr-only">
+                {isUnitedStates ? "ZIP Code" : "Postal Code"}
+              </label>
+              <input
+                type="text"
+                id="zipCode"
+                name="zipCode"
+                placeholder={isUnitedStates ? "ZIP Code" : "Postal Code"}
+                value={formData.zipCode}
+                onChange={handleInputChange}
+                autoComplete="postal-code"
+                inputMode="numeric"
+                className="w-full px-4 py-3 border text-black border-gray-200 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#C8385E]/80"
+                required
+              />
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="ageGroup" className="block sr-only">Age Group</label>
+          <select
+            id="ageGroup"
+            name="ageGroup"
+            value={formData.ageGroup}
+            onChange={(e) => {
+              const value = e.target.value;
+              setFormData(prev => ({
+                ...prev,
+                ageGroup: value,
+                guardianFirstName: value === TEEN_AGE_GROUP ? prev.guardianFirstName : "",
+                guardianLastName: value === TEEN_AGE_GROUP ? prev.guardianLastName : "",
+                guardianPhone: value === TEEN_AGE_GROUP ? prev.guardianPhone : "",
+                guardianEmail: value === TEEN_AGE_GROUP ? prev.guardianEmail : "",
+                parentSignature: value === TEEN_AGE_GROUP ? prev.parentSignature : "",
+                parentConsentAccepted: value === TEEN_AGE_GROUP ? prev.parentConsentAccepted : false,
+              }));
+            }}
+            required
+            className="w-full px-4 py-3 border text-black border-gray-200 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#C8385E]/80 bg-white"
+          >
+            <option value="" disabled>Age Group</option>
+            <option value="Teens (ages 12-15)">Teens (ages 12-15)</option>
+            <option value="Young Adults (ages 16-18)">Young Adults (ages 16-18)</option>
+            <option value="Adults (18 years and older)">Adults (18 years and older)</option>
+          </select>
+        </div>
+
+        {formData.ageGroup === TEEN_AGE_GROUP && (
+          <div className="space-y-4 rounded-lg border border-[#C8385E]/20 bg-[#FFF7FA] p-4">
+            <p className="text-sm text-gray-700">
+              {isPaidTeenRegistration
+                ? "Teen registration is $50 for participants in the United States and requires parent or guardian consent."
+                : "Teen registration requires parent or guardian consent."}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="w-full">
+                <label htmlFor="guardianFirstName" className="block sr-only">Parent or guardian first name</label>
+                <input
+                  type="text"
+                  id="guardianFirstName"
+                  name="guardianFirstName"
+                  placeholder="Parent/Guardian First Name"
+                  value={formData.guardianFirstName}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 border text-black border-gray-200 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#C8385E]/80 bg-white"
+                  required
+                />
+              </div>
+              <div className="w-full">
+                <label htmlFor="guardianLastName" className="block sr-only">Parent or guardian last name</label>
+                <input
+                  type="text"
+                  id="guardianLastName"
+                  name="guardianLastName"
+                  placeholder="Parent/Guardian Last Name"
+                  value={formData.guardianLastName}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 border text-black border-gray-200 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#C8385E]/80 bg-white"
+                  required
+                />
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="w-full">
+                <label htmlFor="guardianPhone" className="block sr-only">Parent or guardian phone number</label>
+                <input
+                  type="tel"
+                  id="guardianPhone"
+                  name="guardianPhone"
+                  placeholder="Parent/Guardian Phone Number"
+                  value={formData.guardianPhone}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 border text-black border-gray-200 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#C8385E]/80 bg-white"
+                  required
+                />
+              </div>
+              <div className="w-full">
+                <label htmlFor="guardianEmail" className="block sr-only">Parent or guardian email</label>
+                <input
+                  type="email"
+                  id="guardianEmail"
+                  name="guardianEmail"
+                  placeholder="Parent/Guardian Email"
+                  value={formData.guardianEmail}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 border text-black border-gray-200 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#C8385E]/80 bg-white"
+                  required
+                />
+              </div>
+            </div>
+            <div>
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <label htmlFor="parentSignaturePad" className="text-sm font-medium text-gray-700">
+                  Parent/Guardian Signature
+                </label>
+                <button
+                  type="button"
+                  onClick={clearSignature}
+                  className="text-sm font-medium text-[#C8385E] hover:underline"
+                >
+                  Clear
+                </button>
+              </div>
+              <canvas
+                ref={signatureCanvasRef}
+                id="parentSignaturePad"
+                width={720}
+                height={220}
+                onPointerDown={startSignature}
+                onPointerMove={drawSignature}
+                onPointerUp={endSignature}
+                onPointerLeave={endSignature}
+                onPointerCancel={endSignature}
+                className="h-40 w-full touch-none rounded-lg border border-gray-200 bg-white"
+                aria-label="Draw parent or guardian signature"
+              />
+              <p className="mt-2 text-xs text-gray-500">
+                Use your mouse, trackpad, or finger to sign above.
+              </p>
+            </div>
+            <label className="flex items-start gap-3 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                name="parentConsentAccepted"
+                checked={formData.parentConsentAccepted}
+                onChange={(e) => setFormData(prev => ({ ...prev, parentConsentAccepted: e.target.checked }))}
+                className="mt-1 h-4 w-4 accent-[#C8385E]"
+                required
+              />
+              <span>
+                I am the parent or legal guardian and I consent to this teen participating in Antioch Bible Study.
+                {isPaidTeenRegistration ? " I understand the teen registration fee is $50." : ""}
+              </span>
+            </label>
+          </div>
+        )}
 
         <div>
           <label htmlFor="contactPreference" className="block text-sm font-medium sr-only text-gray-700 mb-1">
@@ -316,8 +712,9 @@ export default function BibleStudyForm() {
 
         <div>
           <ReCAPTCHA
-            sitekey="6LdFrEwrAAAAANVypGG4w4jpPR6SC-oEEq8hNraj"
+            sitekey={getRecaptchaSiteKey()}
             onChange={(token) => setRecaptchaToken(token)}
+            onExpired={() => setRecaptchaToken(null)}
           />
         </div>
 
@@ -329,7 +726,11 @@ export default function BibleStudyForm() {
               status === "submitting" ? "bg-gray-400 cursor-not-allowed" : "bg-[#C8385E] hover:bg-[#C8385E]/90"
             } text-white font-medium text-sm sm:text-base py-3 px-4 rounded-full transition-colors duration-300`}
           >
-            {status === "submitting" ? "Sending..." : "Submit"}
+            {status === "submitting"
+              ? "Sending..."
+              : isPaidTeenRegistration
+                ? "Pay $50 and Register"
+                : "Submit"}
           </button>
         </div>
 

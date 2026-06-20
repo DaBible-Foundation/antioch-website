@@ -68,7 +68,7 @@ export default function Header() {
             </button>
 
             <button
-              onClick={() => navigate("/#register")}
+              onClick={() => navigate("/register")}
               className={`${pathname === "/register" ? "text-[#6B051F] font-semibold" : "text-gray-700"} hover:text-gray-900 cursor-pointer`}
             >
               Register <span className="text-gray-500">(Free)</span>
@@ -155,8 +155,8 @@ export default function Header() {
                   Home
                 </button>
                 <button
-                  onClick={() => navigate("/#register")}
-                  className={`${pathname === "/about" ? "text-[#6B051F] font-semibold" : "text-gray-700"} hover:text-gray-900 py-2 cursor-pointer`}
+                  onClick={() => navigate("/register")}
+                  className={`${pathname === "/register" ? "text-[#6B051F] font-semibold" : "text-gray-700"} hover:text-gray-900 py-2 cursor-pointer`}
                 >
                   Register
                 </button>

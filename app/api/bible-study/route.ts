@@ -25,17 +25,41 @@ function buildListItems(data: {
   email: string;
   country: string;
   phone: string;
+  address: string;
+  ageGroup: string;
+  guardianFirstName?: string;
+  guardianLastName?: string;
+  guardianPhone?: string;
+  guardianEmail?: string;
+  parentSignature?: string;
+  parentConsentAccepted?: boolean;
   contactPreference: string;
   otherContactDetail?: string;
 }): ListItem[] {
+  const isPaidTeenRegistration = data.ageGroup === 'Teens (ages 12-15)' && data.country === 'United States of America';
   const items: ListItem[] = [
     { label: 'First Name', value: data.firstName },
     { label: 'Last Name', value: data.lastName },
     { label: 'Email', value: data.email },
     { label: 'Country', value: data.country },
     { label: 'Phone', value: data.phone },
+    { label: 'Address', value: data.address },
+    { label: 'Age Group', value: data.ageGroup },
     { label: 'Preferred Contact Method', value: data.contactPreference },
   ];
+  if (data.ageGroup === 'Teens (ages 12-15)') {
+    items.push(
+      { label: 'Parent/Guardian First Name', value: data.guardianFirstName || '' },
+      { label: 'Parent/Guardian Last Name', value: data.guardianLastName || '' },
+      { label: 'Parent/Guardian Phone', value: data.guardianPhone || '' },
+      { label: 'Parent/Guardian Email', value: data.guardianEmail || '' },
+      { label: 'Parent/Guardian Signature', value: data.parentSignature ? 'Captured' : '' },
+      { label: 'Parent/Guardian Consent', value: data.parentConsentAccepted ? 'Accepted' : 'Not accepted' },
+      { label: 'Registration Fee', value: isPaidTeenRegistration ? '$50' : 'Free' },
+    );
+  } else {
+    items.push({ label: 'Registration Fee', value: 'Free' });
+  }
   if (data.contactPreference === 'Other' && data.otherContactDetail) {
     items.push({ label: 'Other Contact Detail', value: data.otherContactDetail });
   }
@@ -209,7 +233,25 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   console.log('🔥 [API DEBUG] Request body received:', body);
   
-  let { firstName, lastName, email, country, countryCode, phone, contactPreference, otherContactDetail } = body;
+  let {
+    firstName,
+    lastName,
+    email,
+    country,
+    countryCode,
+    phone,
+    address,
+    ageGroup,
+    guardianFirstName,
+    guardianLastName,
+    guardianPhone,
+    guardianEmail,
+    parentSignature,
+    parentConsentAccepted,
+    contactPreference,
+    otherContactDetail,
+    recaptchaToken
+  } = body;
 
   firstName = normalizeName(firstName);
   lastName = normalizeName(lastName);
@@ -224,8 +266,19 @@ export async function POST(req: NextRequest) {
   if (!email) missing.push('Email');
   if (!country) missing.push('Country');
   if (!phone) missing.push('Phone');
+  if (!address) missing.push('Address');
+  if (!ageGroup) missing.push('Age Group');
+  if (ageGroup === 'Teens (ages 12-15)') {
+    if (!guardianFirstName) missing.push('Parent/Guardian First Name');
+    if (!guardianLastName) missing.push('Parent/Guardian Last Name');
+    if (!guardianPhone) missing.push('Parent/Guardian Phone');
+    if (!guardianEmail) missing.push('Parent/Guardian Email');
+    if (!parentSignature) missing.push('Parent/Guardian Signature');
+    if (!parentConsentAccepted) missing.push('Parent/Guardian Consent');
+  }
   if (!contactPreference) missing.push('Preferred Contact Method');
   if (contactPreference === 'Other' && !otherContactDetail) missing.push('Other Contact Detail');
+  if (!recaptchaToken) missing.push('reCAPTCHA');
 
   if (missing.length) {
     console.error('❌ [API DEBUG] Missing fields:', missing);
@@ -240,6 +293,14 @@ export async function POST(req: NextRequest) {
       email,
       country,
       phone,
+      address,
+      ageGroup,
+      guardianFirstName,
+      guardianLastName,
+      guardianPhone,
+      guardianEmail,
+      parentSignature,
+      parentConsentAccepted,
       contactPreference,
       otherContactDetail
     });
