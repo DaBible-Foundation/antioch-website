@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable prefer-const */
 import { emailTemplate } from '@/components/EmailTemplate';
 import { NextRequest, NextResponse } from 'next/server';
@@ -15,8 +14,24 @@ const ENABLE_SMS = process.env.ENABLE_BIBLE_STUDY_SMS === 'true';
 // ---- Helpers ----
 type ListItem = { label: string; value: string };
 
+const TEEN_AGE_GROUP = 'Teens (ages 12-15)';
+const YOUNG_ADULT_AGE_GROUP = 'Young Adults (ages 16-18)';
+const ADULT_AGE_GROUP = 'Adults (18 years and older)';
+const ONBOARDING_WHATSAPP_URL = 'https://chat.whatsapp.com/FGA9UkTb1mY0MnFGCgHTGc?s=cl&p=i&ilr=4';
+const TEENS_WHATSAPP_URL = 'https://chat.whatsapp.com/Cv7HVeyEKPQ2Le61HSR3V8?s=cl&p=i&ilr=4';
+const YOUNG_ADULTS_WHATSAPP_URL = 'https://chat.whatsapp.com/FmeLlLWIwgZ0H1lw58vECR?s=cl&p=i&ilr=4';
+const ADULTS_WHATSAPP_URL = 'https://chat.whatsapp.com/FmeLlLWIwgZ0H1lw58vECR?s=cl&p=i&ilr=4';
+
 function normalizeName(name: string) {
   return name ? name.charAt(0).toUpperCase() + name.slice(1).toLowerCase() : '';
+}
+
+function getWhatsAppGroupUrl(ageGroup: string, knowsAntioch?: string) {
+  if (knowsAntioch !== 'yes') return ONBOARDING_WHATSAPP_URL;
+  if (ageGroup === TEEN_AGE_GROUP) return TEENS_WHATSAPP_URL;
+  if (ageGroup === YOUNG_ADULT_AGE_GROUP) return YOUNG_ADULTS_WHATSAPP_URL;
+  if (ageGroup === ADULT_AGE_GROUP) return ADULTS_WHATSAPP_URL;
+  return ONBOARDING_WHATSAPP_URL;
 }
 
 function buildListItems(data: {
@@ -33,10 +48,11 @@ function buildListItems(data: {
   guardianEmail?: string;
   parentSignature?: string;
   parentConsentAccepted?: boolean;
+  knowsAntioch?: string;
   contactPreference: string;
   otherContactDetail?: string;
 }): ListItem[] {
-  const isPaidTeenRegistration = data.ageGroup === 'Teens (ages 12-15)' && data.country === 'United States of America';
+  const isPaidTeenRegistration = data.ageGroup === TEEN_AGE_GROUP && data.country === 'United States of America';
   const items: ListItem[] = [
     { label: 'First Name', value: data.firstName },
     { label: 'Last Name', value: data.lastName },
@@ -45,9 +61,10 @@ function buildListItems(data: {
     { label: 'Phone', value: data.phone },
     { label: 'Address', value: data.address },
     { label: 'Age Group', value: data.ageGroup },
+    { label: 'Already Familiar with Antioch or DaBible Foundation', value: data.knowsAntioch === 'yes' ? 'Yes' : 'No' },
     { label: 'Preferred Contact Method', value: data.contactPreference },
   ];
-  if (data.ageGroup === 'Teens (ages 12-15)') {
+  if (data.ageGroup === TEEN_AGE_GROUP) {
     items.push(
       { label: 'Parent/Guardian First Name', value: data.guardianFirstName || '' },
       { label: 'Parent/Guardian Last Name', value: data.guardianLastName || '' },
@@ -116,6 +133,11 @@ async function sendUserEmail(
   lastName: string,
   email: string
 ) {
+  const ageGroup = listItems.find((item) => item.label === 'Age Group')?.value || '';
+  const knowsAntioch = listItems.find((item) => item.label === 'Already Familiar with Antioch or DaBible Foundation')?.value === 'Yes' ? 'yes' : 'no';
+  const whatsappGroupUrl = getWhatsAppGroupUrl(ageGroup, knowsAntioch);
+  const isOnboardingGroup = whatsappGroupUrl === ONBOARDING_WHATSAPP_URL;
+
   try {
     await transporter.sendMail({
       from: `"DaBible Foundation" <${process.env.DABIBLE_GMAIL_ADDRESS}>`,
@@ -128,14 +150,18 @@ async function sendUserEmail(
         listItems,
         paragraph1: `We're thrilled to welcome you to the Antioch Bible Study family. You've just taken the first step toward a deeper, more vibrant walk with God, and you're not doing it alone.`,
         heading1: 'What Happens Next?',
-        paragraph2: "To get started, please click the button below to join our onboarding WhatsApp group. This is where you'll receive next steps, meet fellow participants, and get all the details about our bible study.",
+        paragraph2: isOnboardingGroup
+          ? "To get started, please click the button below to join our onboarding WhatsApp group. This is where you'll receive next steps, meet fellow participants, and get all the details about our bible study."
+          : "Please click the button below to join the WhatsApp group for your Bible Study age group.",
         ctaButtons: [
           {
             label: 'Join WhatsApp Group',
-            url: 'https://chat.whatsapp.com/FGA9UkTb1mY0MnFGCgHTGc',
+            url: whatsappGroupUrl,
           }
         ],
-        paragraph3: `We host regular onboarding sessions to help you understand our mission, structure, and what to expect during our weekly studies.`,
+        paragraph3: isOnboardingGroup
+          ? `We host regular onboarding sessions to help you understand our mission, structure, and what to expect during our weekly studies.`
+          : `We are glad to have you continue with the Antioch Bible Study community.`,
         heading2: 'Your Registration Summary',
         paragraph4: `We can't wait to connect with you. Your spiritual growth matters to us, and we're honored to walk alongside you.`,
       }),
@@ -248,6 +274,7 @@ export async function POST(req: NextRequest) {
     guardianEmail,
     parentSignature,
     parentConsentAccepted,
+    knowsAntioch,
     contactPreference,
     otherContactDetail,
     recaptchaToken
@@ -268,7 +295,8 @@ export async function POST(req: NextRequest) {
   if (!phone) missing.push('Phone');
   if (!address) missing.push('Address');
   if (!ageGroup) missing.push('Age Group');
-  if (ageGroup === 'Teens (ages 12-15)') {
+  if (!knowsAntioch) missing.push('Antioch or DaBible Foundation Familiarity');
+  if (ageGroup === TEEN_AGE_GROUP) {
     if (!guardianFirstName) missing.push('Parent/Guardian First Name');
     if (!guardianLastName) missing.push('Parent/Guardian Last Name');
     if (!guardianPhone) missing.push('Parent/Guardian Phone');
@@ -301,6 +329,7 @@ export async function POST(req: NextRequest) {
       guardianEmail,
       parentSignature,
       parentConsentAccepted,
+      knowsAntioch,
       contactPreference,
       otherContactDetail
     });

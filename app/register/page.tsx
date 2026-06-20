@@ -1,4 +1,4 @@
-import BibleStudyForm from "@/components/BibleStudyForm";
+import ClientBibleStudyForm from "@/components/ClientBibleStudyForm";
 import Image from "next/image";
 import type { Metadata } from "next";
 
@@ -35,15 +35,12 @@ export default function RegisterPage() {
       </div>
 
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-8 content-stretch items-center">
-        <BibleStudyForm />
+        <ClientBibleStudyForm />
 
         <div className="w-full mx-auto items-stretch lg:h-full text-center justify-center">
           <h3 className="text-2xl md:text-4xl text-gray-900 mb-4 font-montserrat font-extrabold">
             Current Session:
           </h3>
-          <p className="text-md md:text-lg text-gray-700 mb-6">
-            We are studying Fear of God.
-          </p>
           <Image
             width={500}
             height={500}

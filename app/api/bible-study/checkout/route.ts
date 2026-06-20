@@ -10,6 +10,13 @@ function normalizeName(name: string) {
   return name ? name.charAt(0).toUpperCase() + name.slice(1).toLowerCase() : '';
 }
 
+function getAgeGroupParam(ageGroup: string) {
+  if (ageGroup === 'Teens (ages 12-15)') return 'teens';
+  if (ageGroup === 'Young Adults (ages 16-18)') return 'young-adults';
+  if (ageGroup === 'Adults (18 years and older)') return 'adults';
+  return '';
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.json();
   const {
@@ -25,6 +32,7 @@ export async function POST(req: NextRequest) {
     guardianEmail,
     parentSignature,
     parentConsentAccepted,
+    knowsAntioch,
     contactPreference,
     otherContactDetail,
     recaptchaToken
@@ -48,6 +56,7 @@ export async function POST(req: NextRequest) {
   if (!guardianEmail) missing.push('Parent/Guardian Email');
   if (!parentSignature) missing.push('Parent/Guardian Signature');
   if (!parentConsentAccepted) missing.push('Parent/Guardian Consent');
+  if (!knowsAntioch) missing.push('Antioch or DaBible Foundation Familiarity');
   if (!contactPreference) missing.push('Preferred Contact Method');
   if (contactPreference === 'Other' && !otherContactDetail) missing.push('Other Contact Detail');
   if (!recaptchaToken) missing.push('reCAPTCHA');
@@ -65,10 +74,17 @@ export async function POST(req: NextRequest) {
   });
 
   const origin = req.nextUrl.origin;
+  const successParams = new URLSearchParams({
+    registration: 'teen',
+    payment: 'success',
+    ageGroup: getAgeGroupParam(ageGroup),
+    knowsAntioch,
+  });
+
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',
     customer_email: email,
-    success_url: `${origin}/congratulations?registration=teen&payment=success&session_id={CHECKOUT_SESSION_ID}`,
+    success_url: `${origin}/congratulations?${successParams.toString()}&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/register`,
     line_items: [
       {
@@ -99,6 +115,7 @@ export async function POST(req: NextRequest) {
       guardianEmail,
       parentSignatureCaptured: parentSignature ? 'true' : 'false',
       parentConsentAccepted: parentConsentAccepted ? 'true' : 'false',
+      knowsAntioch,
       contactPreference,
       otherContactDetail: otherContactDetail || '',
     },

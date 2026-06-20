@@ -4,7 +4,52 @@ import { Instagram } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-export default function AntiochPage() {
+const ONBOARDING_WHATSAPP_GROUP = {
+  label: "Join Onboarding WhatsApp Group",
+  url: "https://chat.whatsapp.com/FGA9UkTb1mY0MnFGCgHTGc?s=cl&p=i&ilr=4",
+};
+
+const WHATSAPP_GROUPS = {
+  teens: {
+    label: "Join Teens WhatsApp Group",
+    url: "https://chat.whatsapp.com/Cv7HVeyEKPQ2Le61HSR3V8?s=cl&p=i&ilr=4",
+  },
+  "young-adults": {
+    label: "Join Young Adults WhatsApp Group",
+    url: "https://chat.whatsapp.com/FmeLlLWIwgZ0H1lw58vECR?s=cl&p=i&ilr=4",
+  },
+  adults: {
+    label: "Join Adults WhatsApp Group",
+    url: "https://chat.whatsapp.com/FmeLlLWIwgZ0H1lw58vECR?s=cl&p=i&ilr=4",
+  },
+};
+
+type SearchParams = Record<string, string | string[] | undefined>;
+
+function getSearchValue(searchParams: SearchParams, key: string) {
+  const value = searchParams[key];
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function getWhatsAppGroup(searchParams: SearchParams) {
+  const knowsAntioch = getSearchValue(searchParams, "knowsAntioch");
+  const ageGroup = getSearchValue(searchParams, "ageGroup");
+
+  if (knowsAntioch !== "yes") return ONBOARDING_WHATSAPP_GROUP;
+  if (ageGroup === "teens") return WHATSAPP_GROUPS.teens;
+  if (ageGroup === "young-adults") return WHATSAPP_GROUPS["young-adults"];
+  if (ageGroup === "adults") return WHATSAPP_GROUPS.adults;
+  return ONBOARDING_WHATSAPP_GROUP;
+}
+
+export default async function AntiochPage({
+  searchParams,
+}: {
+  searchParams?: Promise<SearchParams>;
+}) {
+  const resolvedSearchParams = await searchParams;
+  const whatsAppGroup = getWhatsAppGroup(resolvedSearchParams || {});
+  const isOnboardingGroup = whatsAppGroup.url === ONBOARDING_WHATSAPP_GROUP.url;
   
   return (
     <div className="w-full">
@@ -31,14 +76,16 @@ export default function AntiochPage() {
             
             <h1 className="text-2xl lg:text-5xl mt-0 mb-8 md:mt-8 md:mb-16 font-montserrat font-extrabold text-gray-800">Congratulations!</h1>
             <p className="text-lg md:text-xl text-gray-700 mt-4 font-proza-libre max-w-2xl mx-auto">
-              Before you begin your Bible study journey, there is a 1:1 onboarding session to walk you through how we study the Bible together as a community.
+              {isOnboardingGroup
+                ? "Before you begin your Bible study journey, there is a 1:1 onboarding session to walk you through how we study the Bible together as a community."
+                : "Your registration is complete. Please join the WhatsApp group for your Bible Study age group."}
             </p>
             {/* <p className="text-lg md:text-xl text-gray-700 mt-4 font-proza-libre max-w-2xl mx-auto">
               The next onboarding session will be announced on our Onboarding WhatsApp group
             </p> */}
             <div className="w-auto max-w-96 mx-auto mt-8 d-inline">
                 <Link
-                href="https://chat.whatsapp.com/FGA9UkTb1mY0MnFGCgHTGc"
+                href={whatsAppGroup.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex flex-col justify-center items-center gap-6"
@@ -52,7 +99,7 @@ export default function AntiochPage() {
                 height={500}
                 />
 
-                <span className="inline bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-300">Join Antioch WhatsApp Group</span> 
+                <span className="inline bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-300">{whatsAppGroup.label}</span> 
             </Link>
 
             </div>
@@ -135,12 +182,12 @@ export default function AntiochPage() {
 
             <div className="flex flex-col md:flex-row justify-center gap-6">
                 <a
-                href="https://chat.whatsapp.com/FGA9UkTb1mY0MnFGCgHTGc"
+                href={whatsAppGroup.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className=" bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-300"
                 >
-                Join Antioch WhatsApp Group
+                {whatsAppGroup.label}
                 </a>
 
                 <a

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react/no-unescaped-entities */
 "use client"
@@ -7,7 +6,7 @@ import 'react-phone-number-input/style.css';
 import Select from 'react-select';
 import ReCAPTCHA from "react-google-recaptcha";
 import * as ct from 'countries-and-timezones';
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from 'next/navigation';
 import Link from "next/link";
 
@@ -56,11 +55,14 @@ const DEFAULT_FORM_DATA = {
   guardianEmail: "",
   parentSignature: "",
   parentConsentAccepted: false,
+  knowsAntioch: "",
   contactPreference: "",
   otherContactDetail: ""
 };
 
 const TEEN_AGE_GROUP = "Teens (ages 12-15)";
+const YOUNG_ADULT_AGE_GROUP = "Young Adults (ages 16-18)";
+const ADULT_AGE_GROUP = "Adults (18 years and older)";
 const US_STATES = [
   ["AL", "Alabama"],
   ["AK", "Alaska"],
@@ -120,9 +122,14 @@ export default function BibleStudyForm() {
 
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
   const signatureCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const isDrawingSignature = useRef(false);
   const router = useRouter();
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const countries = useMemo<CountryOption[]>(() => {
     return getCountries()
@@ -248,10 +255,24 @@ export default function BibleStudyForm() {
     guardianEmail: formData.guardianEmail,
     parentSignature: formData.parentSignature,
     parentConsentAccepted: formData.parentConsentAccepted,
+    knowsAntioch: formData.knowsAntioch,
     contactPreference: formData.contactPreference,
     otherContactDetail: formData.otherContactDetail,
     recaptchaToken,
   };
+
+  const ageGroupParam = formData.ageGroup === TEEN_AGE_GROUP
+    ? "teens"
+    : formData.ageGroup === YOUNG_ADULT_AGE_GROUP
+      ? "young-adults"
+      : formData.ageGroup === ADULT_AGE_GROUP
+        ? "adults"
+        : "";
+
+  const congratulationsParams = new URLSearchParams({
+    ageGroup: ageGroupParam,
+    knowsAntioch: formData.knowsAntioch,
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -268,6 +289,7 @@ export default function BibleStudyForm() {
     if (!formData.state.trim()) missingFields.push(isUnitedStates ? "State" : "State, province, or region");
     if (!formData.zipCode.trim()) missingFields.push(isUnitedStates ? "ZIP code" : "Postal code");
     if (!formData.ageGroup) missingFields.push("Age group");
+    if (!formData.knowsAntioch) missingFields.push("Antioch or DaBible Foundation familiarity");
     if (isTeenRegistration) {
       if (!formData.guardianFirstName.trim()) missingFields.push("Parent or guardian first name");
       if (!formData.guardianLastName.trim()) missingFields.push("Parent or guardian last name");
@@ -313,7 +335,7 @@ export default function BibleStudyForm() {
         setStatus("success");
         setFormData(DEFAULT_FORM_DATA);
         setRecaptchaToken(null);
-        router.push("/congratulations");
+        router.push(`/congratulations?${congratulationsParams.toString()}`);
       } else {
         setStatus("error");
       }
@@ -384,45 +406,49 @@ export default function BibleStudyForm() {
 
         <div>
           <label htmlFor="country" className="block sr-only">Country</label>
-          <Select
-            id="country"
-            inputId="bible-study-country-input"          // added
-            instanceId="bible-study-country"             // added
-            name="country"
-            className="text-black text-sm sm:text-base"
-            classNamePrefix="react-select"
-            options={countries.map(c => ({
-              value: c.countryCode,
-              label: `${c.flag} ${c.name} (${c.dialCode})`,
-              dialCode: c.dialCode,
-              plainName: c.name,
-              countryCode: c.countryCode
-            }))}
-            value={
-              countries
-                .map(c => ({
-                  value: c.countryCode,
-                  label: `${c.flag} ${c.name} (${c.dialCode})`,
-                  dialCode: c.dialCode,
-                  plainName: c.name,
-                  countryCode: c.countryCode
-                }))
-                .find(opt => opt.value === formData.countryCode) || null
-            }
-            onChange={(option: any) => {
-              setFormData(prev => ({
-                ...prev,
-                countryCode: option?.countryCode || '',
-                countryName: option?.plainName || '',
-                dialCode: option?.dialCode || '',
-                state: '',
-                zipCode: '',
-              }));
-            }}
-            placeholder="Select your country"
-            isSearchable
-            required
-          />
+          {isMounted ? (
+            <Select
+              id="country"
+              inputId="bible-study-country-input"
+              instanceId="bible-study-country"
+              name="country"
+              className="text-black text-sm sm:text-base"
+              classNamePrefix="react-select"
+              options={countries.map(c => ({
+                value: c.countryCode,
+                label: `${c.flag} ${c.name} (${c.dialCode})`,
+                dialCode: c.dialCode,
+                plainName: c.name,
+                countryCode: c.countryCode
+              }))}
+              value={
+                countries
+                  .map(c => ({
+                    value: c.countryCode,
+                    label: `${c.flag} ${c.name} (${c.dialCode})`,
+                    dialCode: c.dialCode,
+                    plainName: c.name,
+                    countryCode: c.countryCode
+                  }))
+                  .find(opt => opt.value === formData.countryCode) || null
+              }
+              onChange={(option: any) => {
+                setFormData(prev => ({
+                  ...prev,
+                  countryCode: option?.countryCode || '',
+                  countryName: option?.plainName || '',
+                  dialCode: option?.dialCode || '',
+                  state: '',
+                  zipCode: '',
+                }));
+              }}
+              placeholder="Select your country"
+              isSearchable
+              required
+            />
+          ) : (
+            <div className="h-[46px] rounded-lg border border-gray-200 bg-white" />
+          )}
         </div>
 
         <div>
@@ -555,8 +581,24 @@ export default function BibleStudyForm() {
           >
             <option value="" disabled>Age Group</option>
             <option value="Teens (ages 12-15)">Teens (ages 12-15)</option>
-            <option value="Young Adults (ages 16-18)">Young Adults (ages 16-18)</option>
-            <option value="Adults (18 years and older)">Adults (18 years and older)</option>
+            <option value={YOUNG_ADULT_AGE_GROUP}>Young Adults (ages 16-18)</option>
+            <option value={ADULT_AGE_GROUP}>Adults (18 years and older)</option>
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="knowsAntioch" className="block sr-only">Are you new to Antioch or DaBible Foundation?</label>
+          <select
+            id="knowsAntioch"
+            name="knowsAntioch"
+            value={formData.knowsAntioch}
+            onChange={handleInputChange}
+            required
+            className="w-full px-4 py-3 border text-black border-gray-200 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#C8385E]/80 bg-white"
+          >
+            <option value="" disabled>Are you new to Antioch or DaBible Foundation?</option>
+            <option value="yes">No, I already know Antioch or DaBible Foundation</option>
+            <option value="no">Yes, I am new to both</option>
           </select>
         </div>
 

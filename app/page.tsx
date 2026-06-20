@@ -1,8 +1,8 @@
 // "use client"
-import BibleStudyForm from "@/components/BibleStudyForm";
+import ClientBibleStudyForm from "@/components/ClientBibleStudyForm";
 import Image from "next/image";
 import type { Metadata } from 'next'
-import CountryTimeSelector from "@/components/CountryTimeSelector";
+import ClientCountryTimeSelector from "@/components/ClientCountryTimeSelector";
 
 export const metadata: Metadata = {
   title: "Antioch Online Bible Study | DaBible Foundation",
@@ -145,7 +145,7 @@ export default function AntiochPage() {
                 </p>
                 <ul className="">
                     <li className="text-lg text-gray-800 mb-4 flex items-start gap-3"><span className="font-semibold">📍 Location:</span> Google Meet</li>
-                    <li className="text-lg text-gray-800 mb-4 flex items-start gap-3"><span className="font-semibold">🕒 Time:</span> 9:00 PM CST</li>
+                    <li className="text-lg text-gray-800 mb-4 flex items-start gap-3"><span className="font-semibold">🕒 Time:</span> 7:00 PM Central Time</li>
                     <li className="text-lg text-gray-800 mb-4 flex items-start gap-3"><span className="font-semibold">🌐 Livestream:</span> YouTube & Instagram</li>
                 </ul>
 
@@ -166,7 +166,7 @@ export default function AntiochPage() {
 
         <section className="py-16 px-6 md:px-20">
             <div className="max-w-6xl mx-auto">
-                <CountryTimeSelector />
+                <ClientCountryTimeSelector />
                 <div className="bg-[url('/svg/line-break.svg')] inset-0 w-full h-[25px]  bg-size-[25px] bg-repeat mt-14"></div>
             </div>
         </section>
@@ -184,16 +184,13 @@ export default function AntiochPage() {
                 
                 {/* Form Content */}
                 
-                <BibleStudyForm/>
+                <ClientBibleStudyForm/>
 
                 {/* Right Poster */}
                 <div className="w-full  mx-auto items-stretch lg:h-full text-center justify-center">
                 <h3 className="text-2xl md:text-4xl text-gray-900 mb-4 font-montserrat font-extrabold">
                         Current Session:
                     </h3>
-                    <p className="text-md md:text-lg text-gray-700 mb-6">
-                    We are studying Fear of God.
-                    </p>
                 <Image
                     width={500}
                     height={500}
