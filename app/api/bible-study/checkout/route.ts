@@ -6,6 +6,7 @@ export const runtime = 'nodejs';
 
 const TEEN_AGE_GROUP = 'Teens (ages 12-15)';
 const TEEN_REGISTRATION_FEE_CENTS = 5000;
+const TEEN_REGISTRATION_PRODUCT_ID = process.env.STRIPE_TEEN_REGISTRATION_PRODUCT_ID || 'prod_UjwAvbdAbdEcwp';
 const MAX_TEEN_PARTICIPANTS = 5;
 
 type Participant = {
@@ -136,10 +137,19 @@ export async function POST(req: NextRequest) {
     });
 
     promotionCodeId = promotionCodes.data[0]?.id;
+    const coupon = promotionCodes.data[0]?.coupon;
+    const allowedProducts = coupon?.applies_to?.products || [];
 
-    if (!promotionCodeId) {
+    if (!promotionCodeId || !coupon?.valid) {
       return NextResponse.json(
         { error: 'This discount code is not valid or is no longer active.' },
+        { status: 400 }
+      );
+    }
+
+    if (allowedProducts.length && !allowedProducts.includes(TEEN_REGISTRATION_PRODUCT_ID)) {
+      return NextResponse.json(
+        { error: 'This discount code cannot be applied to this registration.' },
         { status: 400 }
       );
     }
@@ -166,10 +176,7 @@ export async function POST(req: NextRequest) {
         price_data: {
           currency: 'usd',
           unit_amount: TEEN_REGISTRATION_FEE_CENTS,
-          product_data: {
-            name: 'Antioch Bible Study Teen Registration',
-            description: 'Teen registration fee for Antioch Bible Study',
-          },
+          product: TEEN_REGISTRATION_PRODUCT_ID,
         },
       },
     ],

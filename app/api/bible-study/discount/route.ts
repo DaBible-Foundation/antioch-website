@@ -3,6 +3,8 @@ import Stripe from 'stripe';
 
 export const runtime = 'nodejs';
 
+const TEEN_REGISTRATION_PRODUCT_ID = process.env.STRIPE_TEEN_REGISTRATION_PRODUCT_ID || 'prod_UjwAvbdAbdEcwp';
+
 function getAmountCents(value: unknown) {
   const amount = Number(value);
   return Number.isFinite(amount) && amount > 0 ? Math.round(amount) : 0;
@@ -37,10 +39,18 @@ export async function POST(req: NextRequest) {
 
   const promotionCode = promotionCodes.data[0];
   const coupon = promotionCode?.coupon;
+  const allowedProducts = coupon?.applies_to?.products || [];
 
   if (!promotionCode || !coupon?.valid) {
     return NextResponse.json(
       { error: 'This discount code is not valid or is no longer active.' },
+      { status: 400 }
+    );
+  }
+
+  if (allowedProducts.length && !allowedProducts.includes(TEEN_REGISTRATION_PRODUCT_ID)) {
+    return NextResponse.json(
+      { error: 'This discount code cannot be applied to this registration.' },
       { status: 400 }
     );
   }
