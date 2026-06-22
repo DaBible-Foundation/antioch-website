@@ -1,5 +1,6 @@
 // "use client"
 import ClientBibleStudyForm from "@/components/ClientBibleStudyForm";
+import BibleStudyRegistrationFAQ from "@/components/BibleStudyRegistrationFAQ";
 import Image from "next/image";
 import type { Metadata } from 'next'
 import ClientCountryTimeSelector from "@/components/ClientCountryTimeSelector";
@@ -198,6 +199,8 @@ export default function AntiochPage() {
                 {/* Form Content */}
                 <ClientBibleStudyForm/>
             </div>
+
+            <BibleStudyRegistrationFAQ />
         </section>
 
         {/* Watch and Join Online Section */}

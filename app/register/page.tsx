@@ -1,4 +1,5 @@
 import ClientBibleStudyForm from "@/components/ClientBibleStudyForm";
+import BibleStudyRegistrationFAQ from "@/components/BibleStudyRegistrationFAQ";
 import Image from "next/image";
 import type { Metadata } from "next";
 
@@ -50,6 +51,8 @@ export default function RegisterPage() {
 
         <ClientBibleStudyForm />
       </div>
+
+      <BibleStudyRegistrationFAQ />
     </main>
   );
 }
